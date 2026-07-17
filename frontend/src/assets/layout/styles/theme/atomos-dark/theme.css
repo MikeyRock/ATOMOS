@@ -1,0 +1,92 @@
+/*
+  ATOMOS cyberpunk theme.
+  Drop this file at: frontend/src/assets/layout/styles/theme/atomos-dark/theme.css
+  Then in frontend/src/index.html, change the theme-css link href to:
+    assets/layout/styles/theme/atomos-dark/theme.css
+
+  Fonts: Orbitron (logo, headings, stat numbers) + Share Tech Mono (body, tables).
+  Load both via Google Fonts in index.html <head> — see BRANDING.md step 5.
+*/
+
+:root {
+  --atomos-bg: #0a0a0c;
+  --atomos-surface: #111318;
+  --atomos-border: #1f2229;
+  --atomos-text: #e0e2e8;
+  --atomos-text-dim: #6b6f7a;
+  --atomos-teal: #00e5b0;
+  --atomos-pink: #ff2d8a;
+  --atomos-purple: #7a2ea3;
+  --atomos-font-display: 'Orbitron', sans-serif;
+  --atomos-font-body: 'Share Tech Mono', monospace;
+}
+
+body {
+  background-color: var(--atomos-bg) !important;
+  color: var(--atomos-text) !important;
+  font-family: var(--atomos-font-body) !important;
+}
+
+/* PrimeNG panels / cards used throughout the dashboard */
+.p-card, .p-panel, .p-panel-content, .p-datatable, .p-toolbar {
+  background-color: var(--atomos-surface) !important;
+  border: 1px solid var(--atomos-border) !important;
+  color: var(--atomos-text) !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: var(--atomos-surface) !important;
+  color: var(--atomos-text-dim) !important;
+  border-color: var(--atomos-border) !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  background-color: var(--atomos-surface) !important;
+  color: var(--atomos-text) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: #191b20 !important;
+}
+
+/* Stat numbers (hashrate, block height, best difficulty) get the display font */
+.stat-value {
+  font-family: var(--atomos-font-display) !important;
+  color: var(--atomos-teal) !important;
+}
+
+.stat-alert {
+  font-family: var(--atomos-font-display) !important;
+  color: var(--atomos-pink) !important;
+}
+
+.p-badge-success { color: var(--atomos-teal) !important; }
+.p-badge-danger { color: var(--atomos-pink) !important; }
+
+/* Links and secondary brand accents */
+a, .p-button-link {
+  color: var(--atomos-purple) !important;
+}
+
+/* Top bar / logo area */
+.layout-topbar {
+  background-color: var(--atomos-bg) !important;
+  border-bottom: 1px solid var(--atomos-border) !important;
+}
+
+.layout-topbar .app-name {
+  font-family: var(--atomos-font-display) !important;
+  color: var(--atomos-teal) !important;
+  letter-spacing: 4px;
+  font-weight: 500;
+}
+
+.layout-topbar .app-subtitle {
+  font-family: var(--atomos-font-body) !important;
+  color: var(--atomos-purple) !important;
+  font-size: 12px;
+  letter-spacing: 2px;
+}

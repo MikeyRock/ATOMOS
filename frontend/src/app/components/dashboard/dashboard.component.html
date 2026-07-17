@@ -1,0 +1,155 @@
+<ng-container *ngIf="clientInfo$ | async as clientInfo; else pageLoading">
+    <div class="grid page-grid">
+        <div class="col-12">
+            <div class="card page-header-card">
+                <div class="page-title">
+                    <span>Address</span>
+                    <h2>{{address}}</h2>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span>Best Difficulty</span>
+                        <strong>{{clientInfo.bestDifficulty | numberSuffix}}</strong>
+                    </div>
+                    <div class="hero-stat">
+                        <span>Workers</span>
+                        <strong>{{(clientInfo.workers?.length || 0) | number}}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12" *ngIf="networkInfo$ | async as networkInfo">
+            <div class="card snapshot-card">
+                <ng-container *ngIf="clientInfoByPayoutMode$ | async as modeInfo">
+                    <div class="snapshot-header">
+                        <div>
+                            <span>Block Height</span>
+                            <h4>{{networkInfo.blocks | number}}</h4>
+                        </div>
+                        <small>Current block weight {{networkInfo.currentblockweight | number}}</small>
+                    </div>
+
+                    <div class="snapshot-grid">
+                        <div class="snapshot-metric is-primary">
+                            <span>Network Difficulty</span>
+                            <strong>{{networkInfo.difficulty | numberSuffix}}</strong>
+                            <small>{{networkInfo.networkhashps | hashSuffix}} network hashrate</small>
+                        </div>
+
+                        <div class="snapshot-metric">
+                            <span>PPLNS Work</span>
+                            <strong>{{modeInfo.pplns.accounting?.totalCreditedDifficulty | numberSuffix}}</strong>
+                            <small>{{modeInfo.pplns.accounting?.creditedDifficultyLast10Minutes | numberSuffix}} last 10m</small>
+                        </div>
+
+                        <div class="snapshot-metric" *ngIf="clientInfo.expectedPayout">
+                            <span>Expected Payout</span>
+                            <strong>{{clientInfo.expectedPayout.payoutSats | number}} sats</strong>
+                            <small>{{clientInfo.expectedPayout.percent | number:'1.2-2'}}% if the next PPLNS block is found</small>
+                        </div>
+
+                        <div class="snapshot-metric">
+                            <span>Solo Work</span>
+                            <strong>{{modeInfo.solo.accounting?.totalCreditedDifficulty | numberSuffix}}</strong>
+                            <small>{{modeInfo.solo.accounting?.creditedDifficultyLast10Minutes | numberSuffix}} last 10m</small>
+                        </div>
+
+                        <div class="snapshot-metric">
+                            <span>Best Difficulty</span>
+                            <strong>{{clientInfo.accounting?.bestSubmissionDifficulty | numberSuffix}}</strong>
+                            <small>Best submitted difficulty for this address</small>
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card section-card">
+                <div class="section-header">
+                    <div>
+                        <h4>Workers</h4>
+                        <span>Grouped by worker name, expanded by active session.</span>
+                    </div>
+                </div>
+                <p-table #dataTable [rowHover]="true" groupRowsBy="name" dataKey="name" rowGroupMode="subheader"
+                    [value]="clientInfo.workers" [expandedRowKeys]="expandedRows$ | async"
+                    styleClass="compact-table">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>Name</th>
+                            <th>Mode</th>
+                            <th class="numeric-cell">Session ID</th>
+                            <th class="numeric-cell">Hashrate</th>
+                            <th class="numeric-cell">Best Difficulty</th>
+                            <th class="numeric-cell">Uptime</th>
+                            <th class="numeric-cell">Last Seen</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="groupheader" let-worker let-rowIndex="rowIndex" let-expanded="expanded">
+                        <tr [routerLink]="[worker.name]">
+                            <td data-label="Name">
+                                <button (click)="$event.stopImmediatePropagation()" type="button" pButton pRipple
+                                    [pRowToggler]="worker" class="p-button-text p-button-rounded p-button-plain mr-2"
+                                    [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
+                                <span class="worker-name font-bold ml-2">{{worker.name}}</span>
+                            </td>
+                            <td data-label="Mode">
+                                <span *ngFor="let mode of getWorkerPayoutModes(worker.name, clientInfo.workers)"
+                                    [class]="getPayoutModeClass(mode)">
+                                    {{formatPayoutMode(mode)}}
+                                </span>
+                            </td>
+                            <td data-label="Sessions" class="numeric-cell">{{getSessionCount(worker.name, clientInfo.workers)}} Sessions</td>
+                            <td data-label="Hashrate" class="numeric-cell">{{getTotalHashRate(worker.name, clientInfo.workers) | hashSuffix}}</td>
+                            <td data-label="Best Difficulty" class="numeric-cell">{{getBestDifficulty(worker.name, clientInfo.workers) | numberSuffix}}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="rowexpansion" let-worker>
+                        <tr [routerLink]="[worker.name, worker.sessionId]">
+                            <td></td>
+                            <td data-label="Mode"><span [class]="getPayoutModeClass(worker.payoutMode)">{{formatPayoutMode(worker.payoutMode)}}</span></td>
+                            <td data-label="Session ID" class="numeric-cell">{{worker.sessionId}}</td>
+                            <td data-label="Hashrate" class="numeric-cell">{{worker.hashRate | hashSuffix}}</td>
+                            <td data-label="Best Difficulty" class="numeric-cell">{{worker.bestDifficulty | numberSuffix}}</td>
+                            <td data-label="Uptime" class="numeric-cell">{{worker.startTime | dateAgo}}</td>
+                            <td data-label="Last Seen" class="numeric-cell">{{worker.lastSeen | dateAgo}}</td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card chart section-card">
+                <div class="section-header">
+                    <div>
+                        <h4>Address Hashrate</h4>
+                        <span>10-minute credited-work hashrate split by payout mode.</span>
+                    </div>
+                </div>
+                <ng-container *ngIf="chartData$ | async as chartData; else loadingChart">
+                    <p-chart [data]="chartData" [options]="chartOptions"></p-chart>
+                </ng-container>
+                <ng-template #loadingChart>
+                    <p-skeleton width="100%" height="40vh"></p-skeleton>
+                </ng-template>
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<ng-template #pageLoading>
+    <div class="grid page-grid">
+        <div class="col-12">
+            <div class="card section-card">
+                <p-skeleton width="100%" height="8rem"></p-skeleton>
+            </div>
+        </div>
+    </div>
+</ng-template>

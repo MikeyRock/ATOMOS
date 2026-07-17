@@ -1,0 +1,276 @@
+#address {
+    min-width: 0;
+}
+
+.main {
+    margin-top: 1rem;
+}
+
+.sv2-authority-key {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.card {
+    max-width: 1024px;
+    margin: 0 auto;
+}
+
+.hero-card {
+    padding: 2rem;
+}
+
+.hero-brand {
+    align-items: center;
+    display: flex;
+    gap: 1.25rem;
+}
+
+.hero-brand > div {
+    min-width: 0;
+}
+
+.hero-logo {
+    flex: 0 0 auto;
+    height: 112px;
+    width: 112px;
+}
+
+.hero-brand code {
+    display: block;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.hero-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.hero-links a {
+    align-items: center;
+    color: var(--text-color);
+    display: inline-flex;
+    font-size: 1.75rem;
+    justify-content: center;
+    opacity: 0.85;
+}
+
+.hero-links a:hover {
+    opacity: 1;
+}
+
+.lookup-panel {
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    margin-top: 1rem;
+    padding: 0.75rem;
+}
+
+.lookup-heading {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.login-panel {
+    align-items: center;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.hero-footer {
+    color: var(--text-color-secondary);
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.round-card {
+    padding: 1.5rem;
+}
+
+.mode-round-layout {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 auto;
+    max-width: 1024px;
+}
+
+.mode-round-layout.solo-only-layout {
+    grid-template-columns: 1fr;
+}
+
+.mode-round-layout .card {
+    margin: 0;
+    max-width: none;
+    width: 100%;
+}
+
+.mode-heading {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.round-progress-summary {
+    white-space: nowrap;
+}
+
+.round-progress {
+    background: var(--surface-border);
+    border-radius: 999px;
+    height: 0.55rem;
+    overflow: hidden;
+    width: 100%;
+}
+
+.round-progress-fill {
+    background: var(--primary-color);
+    border-radius: inherit;
+    height: 100%;
+    transition: width 180ms ease;
+}
+
+.round-metric-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1.25rem;
+}
+
+.round-metric {
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 1rem;
+}
+
+.round-metric-copy {
+    min-width: 0;
+}
+
+.round-metric-copy span,
+.chart-stat-grid span {
+    color: var(--text-color-secondary);
+    display: block;
+    font-size: 0.875rem;
+    margin-bottom: 0.35rem;
+}
+
+.round-metric-copy strong,
+.chart-stat-grid strong {
+    color: var(--text-color);
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.round-metric i {
+    align-items: center;
+    border-radius: 6px;
+    display: inline-flex;
+    font-size: 1.4rem;
+    height: 2.5rem;
+    justify-content: center;
+    width: 2.5rem;
+}
+
+.round-metric small {
+    color: var(--text-color-secondary);
+    grid-column: 1 / -1;
+}
+
+.chart-header {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.chart-stat-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-width: min(100%, 34rem);
+}
+
+.chart-stat-grid div {
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    padding: 0.75rem;
+}
+
+.accounting-value {
+    overflow-wrap: anywhere;
+}
+
+.pi-star-fill {
+    color: gold;
+}
+
+@media screen and (max-width: 960px) {
+    .hero-card {
+        padding: 1.25rem;
+    }
+
+    .mode-round-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-header {
+        flex-direction: column;
+    }
+
+    .chart-stat-grid {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .hero-brand {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .hero-logo {
+        height: 72px;
+        width: 72px;
+    }
+
+    .hero-brand h1 {
+        font-size: 2rem;
+        line-height: 1.1;
+    }
+
+    .connection-row {
+        grid-template-columns: minmax(0, 1fr) 2.5rem;
+    }
+
+    .connection-row > span {
+        grid-column: 1 / -1;
+    }
+
+    .login-panel,
+    .round-metric-grid,
+    .chart-stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-footer {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+}
