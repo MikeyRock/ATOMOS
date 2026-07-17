@@ -1,0 +1,2 @@
+# ATOMOS
+btc solo mining
