@@ -3,15 +3,12 @@ version: "3.7"
 services:
   app_proxy:
     environment:
-      APP_HOST: atomos_proxy_1        # CHANGE_ME: must match "<id>_proxy_1"
+      APP_HOST: atomos_proxy_1
       APP_PORT: 80
       PROXY_AUTH_WHITELIST: "/api/*"
 
   web:
-    # CHANGE_ME: build from ./frontend and push to your own registry, e.g.
-    #   docker build -t YOUR_DOCKERHUB_USER/atomos-ui:1.0.0 ./frontend
-    #   docker push YOUR_DOCKERHUB_USER/atomos-ui:1.0.0
-    image: YOUR_DOCKERHUB_USER/atomos-ui:1.0.0
+    image: mikeyrocks/atomos-ui:1.0.0
     restart: on-failure
     stop_grace_period: 30s
     environment:
@@ -20,10 +17,7 @@ services:
       - PUBLIC_POOL_STRATUM_URL=${DEVICE_DOMAIN_NAME}:2018
 
   server:
-    # CHANGE_ME: build from ./backend and push to your own registry, e.g.
-    #   docker build -t YOUR_DOCKERHUB_USER/atomos:1.0.0 ./backend
-    #   docker push YOUR_DOCKERHUB_USER/atomos:1.0.0
-    image: YOUR_DOCKERHUB_USER/atomos:1.0.0
+    image: mikeyrocks/atomos:1.0.0
     restart: on-failure
     stop_grace_period: 30s
     ports:
@@ -43,10 +37,9 @@ services:
       - API_SECURE=false
       - ENABLE_SOLO=true
       - ENABLE_PROXY=false
-      - POOL_IDENTIFIER="Atomos Solo Mining"   # shown to miners in their pool config
-      # --- new webhook notification feature ---
-      - WEBHOOK_URL=                        # CHANGE_ME: Discord/Slack/ntfy.sh URL, leave blank to disable
-      - WEBHOOK_FORMAT=discord               # discord | slack | ntfy | json
+      - POOL_IDENTIFIER="Atomos Solo Mining"
+      - WEBHOOK_URL=https://discord.com/api/webhooks/1476414314301624491/mW208G45mFw0lHmZMSE1ciEZXm4Y8Poj5ho-RENehCXjd6M6YAK5_AGZ0Q29LsyJTUDu
+      - WEBHOOK_FORMAT=discord
 
   proxy:
     image: nginx:1.25.3@sha256:4c0fdaa8b6341bfdeca5f18f7837462c80cff90527ee35ef185571e1c327beac
@@ -61,5 +54,5 @@ services:
     image: ghcr.io/getumbrel/umbrel-public-pool-widget:v1.0.0@sha256:b8861a5b79471377f1bfbf6733f11350970b482103d4ef4185f372350ffff6b3
     user: "1000:1000"
     environment:
-      - PUBLIC_POOL_API_URL=http://atomos_proxy_1/api/pool   # CHANGE_ME: match APP_HOST above
+      - PUBLIC_POOL_API_URL=http://atomos_proxy_1/api/pool
     restart: on-failure
