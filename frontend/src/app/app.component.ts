@@ -1,7 +1,4 @@
 import { Component } from '@angular/core';
-import { Observable } from 'rxjs';
-
-import { LocalStorageService } from './services/local-storage.service';
 
 @Component({
   selector: 'app-root',
@@ -10,9 +7,4 @@ import { LocalStorageService } from './services/local-storage.service';
 })
 export class AppComponent {
   title = 'atomos-ui';
-
-  public particles$: Observable<boolean>;
-  constructor(private localService: LocalStorageService) {
-    this.particles$ = this.localService.particles$;
-  }
 }

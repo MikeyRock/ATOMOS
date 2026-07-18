@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 import { DashboardComponent } from './components/dashboard/dashboard.component';
-import { SettingsComponent } from './components/settings/settings.component';
 import { SplashComponent } from './components/splash/splash.component';
 import { WorkerGroupComponent } from './components/worker-group/worker-group.component';
 import { WorkerComponent } from './components/worker/worker.component';
@@ -20,10 +19,6 @@ const routes: Routes = [
       {
         path: ':address',
         children: [
-          {
-            path: 'settings',
-            component: SettingsComponent
-          },
           {
             path: '',
             component: DashboardComponent,

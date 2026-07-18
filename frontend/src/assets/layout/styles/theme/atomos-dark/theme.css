@@ -77,25 +77,10 @@ a, .p-button-link {
   color: var(--atomos-cyan) !important;
 }
 
-/* Top bar / logo area */
+/* Top bar */
 .layout-topbar {
   background-color: var(--atomos-bg) !important;
   border-bottom: 1px solid var(--atomos-border) !important;
-}
-
-.layout-topbar .app-name {
-  font-family: var(--atomos-font-display) !important;
-  color: var(--atomos-cyan) !important;
-  letter-spacing: 3px;
-  font-weight: 900;
-  text-shadow: 0 0 14px rgba(0, 229, 255, 0.7), 0 0 28px rgba(0, 229, 255, 0.35);
-}
-
-.layout-topbar .app-subtitle {
-  font-family: var(--atomos-font-body) !important;
-  color: var(--atomos-pink) !important;
-  font-size: 12px;
-  letter-spacing: 2px;
 }
 
 /* "Sector tag" style badge — use this class on any status/label chip */

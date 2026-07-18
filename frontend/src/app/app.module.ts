@@ -4,14 +4,11 @@ import { CommonModule, HashLocationStrategy, LocationStrategy } from '@angular/c
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
-import { NgParticlesModule } from 'ng-particles';
 
 import { PrimeNGModule } from '../prime-ng.module';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { BackgroundParticlesComponent } from './components/background-particles/background-particles.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
-import { SettingsComponent } from './components/settings/settings.component';
 import { SplashComponent } from './components/splash/splash.component';
 import { UserAgentLinkComponent } from './components/user-agent-link/user-agent-link.component';
 import { WorkerGroupComponent } from './components/worker-group/worker-group.component';
@@ -33,9 +30,7 @@ import { AverageTimeToBlockPipe } from './pipes/average-time-to-block.pipe';
     NumberSuffixPipe,
     DateAgoPipe,
     WorkerGroupComponent,
-    BackgroundParticlesComponent,
     HashSuffixPipe,
-    SettingsComponent,
     UserAgentLinkComponent
   ],
   imports: [
@@ -46,7 +41,6 @@ import { AverageTimeToBlockPipe } from './pipes/average-time-to-block.pipe';
     AppLayoutModule,
     FormsModule,
     ReactiveFormsModule,
-    NgParticlesModule,
     AverageTimeToBlockPipe
   ],
   providers: [
