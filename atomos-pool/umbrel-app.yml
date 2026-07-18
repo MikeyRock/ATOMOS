@@ -21,9 +21,10 @@ gallery:
   - 2.jpg
 path: ""
 releaseNotes: >-
-  v1.1.0: added live BTC/USD price tracking, a halving countdown, real
-  found-blocks and total-earned stats, and a Settings dialog for managing
-  the Discord webhook, BTC address, and alert toggles from the UI.
+  v1.4.0: redesigned Discord alerts with the worker name included, proper
+  K/M/G/T difficulty formatting, and rich colored embeds. Also includes the
+  v1.2-1.3 dashboard redesign, live BTC price/halving tracking, the
+  Settings dialog, and a full removal of leftover Public Pool branding.
 defaultPassword: ""
 widgets:
   - id: "stats"
