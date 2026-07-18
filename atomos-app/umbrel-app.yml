@@ -2,7 +2,7 @@ manifestVersion: 1
 id: atomos
 category: bitcoin
 name: ATOMOS
-icon: https://raw.githubusercontent.com/MikeyRock/ATOMOS/main/app-package/icon.svg
+icon: https://raw.githubusercontent.com/MikeyRock/ATOMOS/main/atomos-app/icon.svg
 version: "1.0.0"
 tagline: My own branded solo Bitcoin mining pool
 description: >-
