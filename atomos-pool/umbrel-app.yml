@@ -3,7 +3,7 @@ id: atomos-pool
 category: bitcoin
 name: ATOMOS
 icon: https://raw.githubusercontent.com/MikeyRock/ATOMOS/main/atomos-pool/icon.svg
-version: "1.0.0"
+version: "1.1.0"
 tagline: My own branded solo Bitcoin mining pool
 description: >-
   A self-hosted solo Bitcoin mining pool, forked from Public Pool
@@ -21,8 +21,9 @@ gallery:
   - 2.jpg
 path: ""
 releaseNotes: >-
-  Initial release: forked from Public Pool with custom branding and
-  generic webhook alerts (Discord/Slack/ntfy) on block found.
+  v1.1.0: added live BTC/USD price tracking, a halving countdown, real
+  found-blocks and total-earned stats, and a Settings dialog for managing
+  the Discord webhook, BTC address, and alert toggles from the UI.
 defaultPassword: ""
 widgets:
   - id: "stats"
