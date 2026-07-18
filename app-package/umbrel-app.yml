@@ -1,19 +1,19 @@
 manifestVersion: 1
-id: atomos                                   # CHANGE_ME: unique app id, lowercase-with-dashes
+id: atomos
 category: bitcoin
-name: ATOMOS                                  # CHANGE_ME: your app's display name
+name: ATOMOS
 version: "1.0.0"
 tagline: My own branded solo Bitcoin mining pool
 description: >-
   A self-hosted solo Bitcoin mining pool, forked from Public Pool
   (https://github.com/benjamin-wilson/public-pool), running against my
   own node with custom branding and webhook notifications on block found.
-developer: CHANGE_ME (your name)
-website: ""                                         # CHANGE_ME: optional project page
+developer: MikeyRocks
+website: ""
 dependencies:
   - bitcoin
-repo: https://github.com/CHANGE_ME/atomos     # CHANGE_ME: your fork's repo URL
-support: https://github.com/CHANGE_ME/atomos/issues
+repo: https://github.com/MikeyRock/ATOMOS
+support: https://github.com/MikeyRock/ATOMOS/issues
 port: 2019
 gallery:
   - 1.jpg
@@ -42,5 +42,5 @@ widgets:
           text: "1"
         - title: "Block Height"
           text: "883453"
-submitter: CHANGE_ME
+submitter: MikeyRocks
 submission: ""
