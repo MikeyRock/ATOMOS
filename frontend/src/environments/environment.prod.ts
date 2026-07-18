@@ -1,11 +1,16 @@
 export const environment = {
     production: true,
-    API_URL: 'https://public-pool.io:40557',
-    STRATUM_URL: 'public-pool.io:3333',
-    SECURE_STRATUM_URL: 'public-pool.io:4333',
-    STRATUM_V2_URL: 'public-pool.io:23330',
-    PPLNS_STRATUM_URL: 'public-pool.io:13333',
-    PPLNS_SECURE_STRATUM_URL: 'public-pool.io:14333',
-    PPLNS_STRATUM_V2_URL: 'public-pool.io:23331',
-    PPLNS_DATUM_URL: 'public-pool.io:23336',
+    // These are only used if runtime-config.js fails to load or set
+    // window.__PUBLIC_POOL_CONFIG__ (see docker/entrypoint.sh). Deliberately
+    // left empty rather than pointing at any external server - a visible
+    // failure (missing connection info) is much safer than silently
+    // connecting to someone else's infrastructure.
+    API_URL: '',
+    STRATUM_URL: '',
+    SECURE_STRATUM_URL: '',
+    STRATUM_V2_URL: '',
+    PPLNS_STRATUM_URL: '',
+    PPLNS_SECURE_STRATUM_URL: '',
+    PPLNS_STRATUM_V2_URL: '',
+    PPLNS_DATUM_URL: '',
 };

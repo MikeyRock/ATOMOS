@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Table } from 'primeng/table';
-import { combineLatest, forkJoin, interval, map, Observable, shareReplay, startWith, switchMap } from 'rxjs';
+import { BehaviorSubject, combineLatest, forkJoin, interval, map, Observable, shareReplay, startWith, switchMap } from 'rxjs';
 
 import { HashSuffixPipe } from '../../pipes/hash-suffix.pipe';
 import { AppService } from '../../services/app.service';
@@ -31,6 +31,12 @@ export class DashboardComponent implements AfterViewInit {
   public btcPrice$: Observable<{ usd: number; usd_24h_change: number; updatedAt: number; }>;
   public halvingInfo$: Observable<{ currentHeight: number; nextHalvingHeight: number; blocksRemaining: number; estimatedDaysRemaining: number; }>;
 
+  public chartRangeHours$ = new BehaviorSubject<number>(24);
+
+  public setChartRange(hours: number) {
+    this.chartRangeHours$.next(hours);
+  }
+
   @ViewChild('dataTable') dataTable!: Table;
 
   public expandedRows$: Observable<any>;
@@ -43,7 +49,11 @@ export class DashboardComponent implements AfterViewInit {
     private appService: AppService
   ) {
 
-    this.networkInfo$ = this.appService.getNetworkInfo().pipe(
+    // Auto-refresh every 10s so the dashboard stays live without a manual reload
+    const refreshTick$ = interval(10 * 1000).pipe(startWith(0));
+
+    this.networkInfo$ = refreshTick$.pipe(
+      switchMap(() => this.appService.getNetworkInfo()),
       shareReplay({ refCount: true, bufferSize: 1 })
     );
 
@@ -62,13 +72,15 @@ export class DashboardComponent implements AfterViewInit {
     );
 
     this.address = this.route.snapshot.params['address'];
-    this.clientInfo$ = this.clientService.getClientInfo(this.address).pipe(
+    this.clientInfo$ = refreshTick$.pipe(
+      switchMap(() => this.clientService.getClientInfo(this.address)),
       shareReplay({ refCount: true, bufferSize: 1 })
     );
-    this.clientInfoByPayoutMode$ = forkJoin({
-      pplns: this.clientService.getClientInfo(this.address, 'pplns'),
-      solo: this.clientService.getClientInfo(this.address, 'solo')
-    }).pipe(
+    this.clientInfoByPayoutMode$ = refreshTick$.pipe(
+      switchMap(() => forkJoin({
+        pplns: this.clientService.getClientInfo(this.address, 'pplns'),
+        solo: this.clientService.getClientInfo(this.address, 'solo')
+      })),
       shareReplay({ refCount: true, bufferSize: 1 })
     );
 
@@ -87,13 +99,18 @@ export class DashboardComponent implements AfterViewInit {
 
 
     this.chartData$ = combineLatest([
-      this.clientService.getClientInfoChartByPayoutMode(this.address, 'all'),
-      this.networkInfo$
+      refreshTick$.pipe(switchMap(() => this.clientService.getClientInfoChartByPayoutMode(this.address, 'all'))),
+      this.networkInfo$,
+      this.chartRangeHours$
     ]).pipe(
-      map(([chartData, networkInfo]) => {
+      map(([chartData, networkInfo, rangeHours]) => {
 
         this.networkInfo = networkInfo;
-        const datasets = this.toPayoutModeDatasets(chartData, {
+
+        const cutoff = Date.now() - (rangeHours * 60 * 60 * 1000);
+        const rangedChartData = chartData.filter((point: any) => Number(point.label) >= cutoff);
+
+        const datasets = this.toPayoutModeDatasets(rangedChartData, {
           pplns: {
             label: 'PPLNS 10 Minute',
             borderColor: primaryColor,
@@ -107,7 +124,7 @@ export class DashboardComponent implements AfterViewInit {
         });
 
         return {
-          labels: chartData.map((d: any) => d.label),
+          labels: rangedChartData.map((d: any) => d.label),
           datasets
         }
       })
@@ -239,6 +256,24 @@ export class DashboardComponent implements AfterViewInit {
       return 0;
     }
     return (yourHashRate / networkInfo.networkhashps) * 100;
+  }
+
+  public getMostRecentLastSeen(workers: any[]): Date | null {
+    if (workers == null || workers.length === 0) return null;
+    return workers.reduce((latest: Date | null, w: any) => {
+      const seen = new Date(w.lastSeen);
+      return (latest == null || seen > latest) ? seen : latest;
+    }, null);
+  }
+
+  // Visual-only progress bar: how close the best submitted difficulty is to
+  // a full block (network difficulty). Capped at 100% for display purposes -
+  // in practice this ratio is astronomically small for a home miner.
+  public getWarmingProgressPercent(bestDifficulty: number, networkInfo: any): number {
+    if (networkInfo == null || networkInfo.difficulty == null || bestDifficulty <= 0) {
+      return 0;
+    }
+    return Math.min(100, (bestDifficulty / networkInfo.difficulty) * 100);
   }
 
   private toChartPoint(point: any) {

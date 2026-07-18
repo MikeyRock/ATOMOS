@@ -20,15 +20,15 @@ export class NotificationService implements OnModuleInit {
         await this.webhookService.notifyRestarted();
     }
 
-    public async notifySubscribersBlockFound(address: string, height: number, block: Block, message: string) {
+    public async notifySubscribersBlockFound(address: string, worker: string, height: number, block: Block, message: string) {
         await this.discordService.notifySubscribersBlockFound(height, block, message);
         await this.telegramService.notifySubscribersBlockFound(address, height, block, message);
-        await this.webhookService.notifySubscribersBlockFound(address, height, block, message);
+        await this.webhookService.notifySubscribersBlockFound(address, worker, height, block, message);
     }
 
     // New: called from StratumV1Client.ts whenever a client sets a new personal-best
     // share difficulty (but did NOT find a full block, which has its own alert above).
-    public async notifyNewBestDifficulty(address: string, difficulty: number) {
-        await this.webhookService.notifyNewBestDifficulty(address, difficulty);
+    public async notifyNewBestDifficulty(address: string, worker: string, difficulty: number) {
+        await this.webhookService.notifyNewBestDifficulty(address, worker, difficulty);
     }
 }

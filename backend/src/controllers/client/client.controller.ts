@@ -38,6 +38,8 @@ export class ClientController {
         const miningInfo = await firstValueFrom(this.bitcoinRpcService.newBlock$);
         const currentBlockReward = this.getCurrentBlockReward(miningInfo.blocks);
 
+        const acceptedSharesLast24h = await this.clientStatisticsService.getTotalAcceptedSharesLast24h(address);
+
         return {
             bestDifficulty: addressSettings?.bestDifficulty,
             workersCount: workers.length,
@@ -59,7 +61,8 @@ export class ClientController {
             // Approximation: real reward paid per block can vary slightly (fees included),
             // this multiplies the current-era subsidy by blocks found. Good enough for a
             // "total earned" estimate; not a substitute for on-chain verification.
-            totalEarnedEstimate: blocksFound.length * currentBlockReward
+            totalEarnedEstimate: blocksFound.length * currentBlockReward,
+            acceptedSharesLast24h
         }
     }
 

@@ -89,7 +89,7 @@ export class TelegramService implements OnModuleInit {
         }
 
         if (msg.text.startsWith('/start')) {
-            await this.sendMessage(msg.chat.id, 'Welcome to the public-pool bot. /subscribe <address> to get notified.');
+            await this.sendMessage(msg.chat.id, 'Welcome to the ATOMOS bot. /subscribe <address> to get notified.');
             return;
         }
 

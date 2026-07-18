@@ -50,6 +50,31 @@
             </div>
         </div>
 
+        <div class="col-12">
+            <div class="stat-card-row">
+                <div class="card stat-card">
+                    <div class="stat-card-label"><i class="pi pi-bolt"></i> Total Hashrate</div>
+                    <div class="stat-card-value">{{getTotalHashRateAll(clientInfo.workers) | hashSuffix}}</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-card-label"><i class="pi pi-users"></i> Active Workers</div>
+                    <div class="stat-card-value">{{clientInfo.workersCount | number}}</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-card-label"><i class="pi pi-box"></i> Blocks Found</div>
+                    <div class="stat-card-value">{{clientInfo.blocksFoundCount | number}}</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-card-label"><i class="pi pi-bitcoin"></i> Block Reward</div>
+                    <div class="stat-card-value">{{clientInfo.currentBlockReward | number:'1.3-3'}}</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-card-label"><i class="pi pi-wallet"></i> Total Earned (est.)</div>
+                    <div class="stat-card-value">{{clientInfo.totalEarnedEstimate | number:'1.8-8'}}</div>
+                </div>
+            </div>
+        </div>
+
         <div class="col-12" *ngIf="networkInfo$ | async as networkInfo">
             <div class="card snapshot-card">
                 <ng-container *ngIf="clientInfoByPayoutMode$ | async as modeInfo">
@@ -100,7 +125,7 @@
             <div class="card section-card">
                 <div class="section-header">
                     <div>
-                        <h4>Workers</h4>
+                        <h4>Live Worker Activity</h4>
                         <span>Grouped by worker name, expanded by active session.</span>
                     </div>
                 </div>
@@ -160,8 +185,13 @@
             <div class="card chart section-card">
                 <div class="section-header">
                     <div>
-                        <h4>Address Hashrate</h4>
+                        <h4>Hashrate (Live)</h4>
                         <span>10-minute credited-work hashrate split by payout mode.</span>
+                    </div>
+                    <div class="chart-range-toggle">
+                        <button type="button" [class.active]="(chartRangeHours$ | async) === 1" (click)="setChartRange(1)">1H</button>
+                        <button type="button" [class.active]="(chartRangeHours$ | async) === 3" (click)="setChartRange(3)">3H</button>
+                        <button type="button" [class.active]="(chartRangeHours$ | async) === 24" (click)="setChartRange(24)">24H</button>
                     </div>
                 </div>
                 <ng-container *ngIf="chartData$ | async as chartData; else loadingChart">
@@ -170,6 +200,64 @@
                 <ng-template #loadingChart>
                     <p-skeleton width="100%" height="40vh"></p-skeleton>
                 </ng-template>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="panel-row-3">
+                <div class="card panel-card">
+                    <h4 class="panel-title is-cyan">Share History <small>(24h)</small></h4>
+                    <div class="panel-stat-row">
+                        <span>Accepted Shares</span>
+                        <strong>{{clientInfo.acceptedSharesLast24h | number}}</strong>
+                    </div>
+                    <div class="panel-stat-row">
+                        <span>Active Workers</span>
+                        <strong>{{clientInfo.workersCount | number}}</strong>
+                    </div>
+                    <div class="panel-stat-row">
+                        <span>Best Hash</span>
+                        <strong>{{clientInfo.bestDifficulty | numberSuffix}}</strong>
+                    </div>
+                </div>
+
+                <div class="card panel-card" *ngIf="networkInfo$ | async as networkInfoPanel">
+                    <h4 class="panel-title is-teal">Block Probability</h4>
+                    <div class="panel-stat-row">
+                        <span>Network Share</span>
+                        <strong>{{getYourNetworkSharePercent(getTotalHashRateAll(clientInfo.workers), networkInfoPanel) | number:'1.2-8'}}%</strong>
+                    </div>
+                    <div class="panel-stat-row">
+                        <span>Est. Time To Find</span>
+                        <strong>{{getTotalHashRateAll(clientInfo.workers) | averageTimeToBlock:networkInfoPanel.difficulty}}</strong>
+                    </div>
+                    <div class="probability-bar">
+                        <div class="probability-bar-fill" [style.width.%]="getWarmingProgressPercent(clientInfo.bestDifficulty, networkInfoPanel)"></div>
+                    </div>
+                </div>
+
+                <div class="card panel-card">
+                    <h4 class="panel-title is-pink">Block History</h4>
+                    <ng-container *ngIf="clientInfo.blocksFound?.length > 0; else noBlocksFound">
+                        <div class="panel-stat-row" *ngFor="let block of clientInfo.blocksFound">
+                            <span>#{{block.height}}</span>
+                            <strong>{{block.worker}}</strong>
+                        </div>
+                    </ng-container>
+                    <ng-template #noBlocksFound>
+                        <div class="panel-empty-state">No blocks found yet</div>
+                    </ng-template>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12" *ngIf="networkInfo$ | async as footerNetworkInfo">
+            <div class="footer-status-bar">
+                <span>ATOMOS OS v1.1.0</span>
+                <span class="is-teal">STRATUM: CONNECTED</span>
+                <span>DIFFICULTY: {{footerNetworkInfo.difficulty | numberSuffix}}</span>
+                <span>BEST SHARE: {{clientInfo.bestDifficulty | numberSuffix}}</span>
+                <span class="is-pink">SOLO MODE: ENABLED</span>
             </div>
         </div>
     </div>

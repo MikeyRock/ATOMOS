@@ -9,7 +9,7 @@ import { LocalStorageService } from './services/local-storage.service';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'public-pool-ui';
+  title = 'atomos-ui';
 
   public particles$: Observable<boolean>;
   constructor(private localService: LocalStorageService) {

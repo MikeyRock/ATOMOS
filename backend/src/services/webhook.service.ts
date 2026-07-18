@@ -5,6 +5,15 @@ import { Block } from 'bitcoinjs-lib';
 
 import { AtomosSettingsService } from '../ORM/atomos-settings/atomos-settings.service';
 
+interface IAlertContent {
+    emoji: string;
+    title: string;
+    // Each line is a [label, value] pair, rendered as "**label:** value"
+    // in Discord/Slack and "label: value" in plain-text formats.
+    lines: [string, string][];
+    color: number;
+}
+
 /**
  * Generic webhook notifier.
  *
@@ -27,6 +36,29 @@ export class WebhookService {
         private readonly configService: ConfigService,
         private readonly settingsService: AtomosSettingsService
     ) { }
+
+    // Same convention as the frontend's numberSuffix pipe (k/M/G/T/...),
+    // so a difficulty of 1,636,415 shows as "1.64M" instead of a long
+    // raw number - matches how Braiins and similar solo mining alerts format values.
+    public static formatSuffix(value: number): string {
+        const suffixes = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q'];
+
+        if (value == null || value < 0) {
+            return '0';
+        }
+        if (value === 0) {
+            return '0';
+        }
+
+        let power = Math.floor(Math.log10(value) / 3);
+        if (power < 0) {
+            power = 0;
+        }
+        const scaledValue = value / Math.pow(1000, power);
+        const suffix = suffixes[power] ?? '';
+
+        return scaledValue.toFixed(2) + suffix;
+    }
 
     private async getActiveConfig(): Promise<{ url: string | null; format: string; alerts: { blockFound: boolean; bestDifficulty: boolean; restart: boolean; } }> {
         const settings = await this.settingsService.getSettings();
@@ -53,21 +85,42 @@ export class WebhookService {
     public async notifyRestarted() {
         const config = await this.getActiveConfig();
         if (!config.alerts.restart) return;
-        await this.send('🔄 Solo pool server restarted.', config.url, config.format);
+        await this.send({
+            emoji: '🔄',
+            title: 'ATOMOS server restarted',
+            lines: [],
+            color: 0x00e5ff
+        }, config.url, config.format);
     }
 
-    public async notifySubscribersBlockFound(address: string, height: number, block: Block, message: string) {
+    public async notifySubscribersBlockFound(address: string, worker: string, height: number, block: Block, message: string) {
         const config = await this.getActiveConfig();
         if (!config.alerts.blockFound) return;
-        const text = `⛏️ BLOCK FOUND!\nAddress: ${address}\nHeight: ${height}\nResult: ${message}`;
-        await this.send(text, config.url, config.format);
+        await this.send({
+            emoji: '⛏️',
+            title: 'BLOCK FOUND!',
+            lines: [
+                ['Worker', worker || 'unknown'],
+                ['Address', address],
+                ['Height', height.toLocaleString()],
+                ['Result', message]
+            ],
+            color: 0xff2d8a
+        }, config.url, config.format);
     }
 
-    public async notifyNewBestDifficulty(address: string, difficulty: number) {
+    public async notifyNewBestDifficulty(address: string, worker: string, difficulty: number) {
         const config = await this.getActiveConfig();
         if (!config.alerts.bestDifficulty) return;
-        const text = `📈 New best difficulty for ${address}: ${difficulty.toLocaleString()}`;
-        await this.send(text, config.url, config.format);
+        await this.send({
+            emoji: '🎯',
+            title: `${worker || 'Worker'} — New Personal Best!`,
+            lines: [
+                ['Best difficulty', WebhookService.formatSuffix(difficulty)],
+                ['Address', address]
+            ],
+            color: 0x00e5b0
+        }, config.url, config.format);
     }
 
     // Called directly from the Settings UI's "Test Webhook" button - bypasses
@@ -78,7 +131,12 @@ export class WebhookService {
             return { success: false, error: 'No webhook URL configured.' };
         }
         try {
-            const payload = this.buildPayload('✅ ATOMOS test alert - if you can see this, your webhook is working.', config.format);
+            const payload = this.buildPayload({
+                emoji: '✅',
+                title: 'ATOMOS test alert',
+                lines: [['Status', 'If you can see this, your webhook is working.']],
+                color: 0x00e5ff
+            }, config.format);
             await axios.post(config.url, payload, { timeout: 10000 });
             return { success: true };
         } catch (e) {
@@ -86,29 +144,43 @@ export class WebhookService {
         }
     }
 
-    private async send(text: string, url: string | null, format: string) {
+    private async send(content: IAlertContent, url: string | null, format: string) {
         if (url == null) {
             return;
         }
 
         try {
-            const payload = this.buildPayload(text, format);
+            const payload = this.buildPayload(content, format);
             await axios.post(url, payload, { timeout: 10000 });
         } catch (e) {
             console.error('Webhook notify failed', e.message);
         }
     }
 
-    private buildPayload(text: string, format: string): any {
+    private buildPayload(content: IAlertContent, format: string): any {
         switch (format) {
             case 'discord':
-                return { content: text };
+                return {
+                    embeds: [{
+                        title: `${content.emoji} ${content.title}`,
+                        description: content.lines.map(([label, value]) => `**${label}:** ${value}`).join('\n'),
+                        color: content.color,
+                        footer: { text: 'ATOMOS Solo Mining' },
+                        timestamp: new Date().toISOString()
+                    }]
+                };
             case 'slack':
-                return { text };
+                return {
+                    text: `*${content.emoji} ${content.title}*\n` + content.lines.map(([label, value]) => `*${label}:* ${value}`).join('\n')
+                };
             case 'ntfy':
-                return text;
+                // ntfy.sh accepts a plain text body as the message
+                return `${content.emoji} ${content.title}\n` + content.lines.map(([label, value]) => `${label}: ${value}`).join('\n');
             default:
-                return { message: text };
+                return {
+                    title: `${content.emoji} ${content.title}`,
+                    fields: Object.fromEntries(content.lines)
+                };
         }
     }
 }

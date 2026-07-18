@@ -37,6 +37,19 @@ export class ClientStatisticsService {
         await this.clientStatisticsRepository.insert(clientStatistic);
     }
 
+    public async getTotalAcceptedSharesLast24h(address: string): Promise<number> {
+        // Note: this table only retains ~24h of history (see deleteOldStatistics
+        // above), so this is a 24h total, not a lifetime total - label it that
+        // way anywhere it's displayed.
+        const result = await this.clientStatisticsRepository
+            .createQueryBuilder()
+            .select('SUM(acceptedCount)', 'total')
+            .where('address = :address', { address })
+            .getRawOne();
+
+        return Number(result?.total) || 0;
+    }
+
     public async deleteOldStatistics() {
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

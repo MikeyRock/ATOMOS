@@ -232,3 +232,152 @@ a, .p-button-link {
 .alert-toggle-row:last-child {
   border-bottom: none;
 }
+
+/* 5-stat card row (hashrate, workers, blocks found, block reward, total earned) */
+.stat-card-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.stat-card {
+  background-color: var(--atomos-surface) !important;
+  border: 1px solid var(--atomos-border) !important;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.stat-card-label {
+  font-size: 10px;
+  color: var(--atomos-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-card-value {
+  font-family: var(--atomos-font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--atomos-text);
+  margin-top: 4px;
+}
+
+/* Chart range toggle (1H / 3H / 24H) */
+.chart-range-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.chart-range-toggle button {
+  background: transparent;
+  border: 1px solid var(--atomos-border);
+  color: var(--atomos-text-dim);
+  font-family: var(--atomos-font-body);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.chart-range-toggle button.active {
+  border-color: var(--atomos-cyan);
+  color: var(--atomos-cyan);
+}
+
+/* 3-column panel row: Share History / Block Probability / Block History */
+.panel-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.panel-card {
+  background-color: var(--atomos-surface) !important;
+  border: 1px solid var(--atomos-border) !important;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.panel-title {
+  font-family: var(--atomos-font-display);
+  font-size: 12px;
+  letter-spacing: 1px;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+}
+
+.panel-title small {
+  font-family: var(--atomos-font-body);
+  color: var(--atomos-text-dim);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.panel-title.is-cyan { color: var(--atomos-cyan); }
+.panel-title.is-teal { color: var(--atomos-teal); }
+.panel-title.is-pink { color: var(--atomos-pink); }
+
+.panel-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--atomos-text-dim);
+  padding: 5px 0;
+}
+
+.panel-stat-row strong {
+  color: var(--atomos-text);
+  font-family: var(--atomos-font-body);
+  font-weight: 400;
+}
+
+.panel-empty-state {
+  font-size: 11px;
+  color: var(--atomos-text-dim);
+  text-align: center;
+  padding: 16px 0;
+}
+
+.probability-bar {
+  background: var(--atomos-border);
+  height: 5px;
+  border-radius: 3px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.probability-bar-fill {
+  background: var(--atomos-teal);
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* Footer status bar */
+.footer-status-bar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--atomos-border);
+  font-family: var(--atomos-font-body);
+  font-size: 10px;
+  color: var(--atomos-text-dim);
+  letter-spacing: 1px;
+}
+
+.footer-status-bar .is-teal { color: var(--atomos-teal); }
+.footer-status-bar .is-pink { color: var(--atomos-pink); }
+
+@media (max-width: 900px) {
+  .stat-card-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .panel-row-3 {
+    grid-template-columns: 1fr;
+  }
+}

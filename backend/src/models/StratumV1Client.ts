@@ -588,7 +588,7 @@ export class StratumV1Client {
                     blockData: blockHex
                 });
 
-                await this.notificationService.notifySubscribersBlockFound(this.clientAuthorization.address, jobTemplate.blockData.height, updatedJobBlock, result);
+                await this.notificationService.notifySubscribersBlockFound(this.clientAuthorization.address, this.clientAuthorization.worker, jobTemplate.blockData.height, updatedJobBlock, result);
                 //success
                 if (result == null) {
                     await this.addressSettingsService.resetBestDifficultyAndShares();
@@ -616,7 +616,7 @@ export class StratumV1Client {
                 // Block-found already sends its own (much louder) alert above, so
                 // skip the best-difficulty ping in that case to avoid double notifying.
                 if (!isBlockFound) {
-                    await this.notificationService.notifyNewBestDifficulty(this.clientAuthorization.address, submissionDifficulty);
+                    await this.notificationService.notifyNewBestDifficulty(this.clientAuthorization.address, this.clientAuthorization.worker, submissionDifficulty);
                 }
             }
 
@@ -630,7 +630,7 @@ export class StratumV1Client {
                     address: this.clientAuthorization.address,
                     userAgent: this.clientSubscription.userAgent,
                     header: header.toString('hex'),
-                    externalPoolName: this.configService.get('POOL_IDENTIFIER') || 'Public-Pool'
+                    externalPoolName: this.configService.get('POOL_IDENTIFIER') || 'ATOMOS'
                 });
             }
 
