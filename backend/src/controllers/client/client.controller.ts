@@ -1,8 +1,11 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import { firstValueFrom } from 'rxjs';
 
 import { AddressSettingsService } from '../../ORM/address-settings/address-settings.service';
+import { BlocksService } from '../../ORM/blocks/blocks.service';
 import { ClientStatisticsService } from '../../ORM/client-statistics/client-statistics.service';
 import { ClientService } from '../../ORM/client/client.service';
+import { BitcoinRpcService } from '../../services/bitcoin-rpc.service';
 
 
 @Controller('client')
@@ -11,9 +14,17 @@ export class ClientController {
     constructor(
         private readonly clientService: ClientService,
         private readonly clientStatisticsService: ClientStatisticsService,
-        private readonly addressSettingsService: AddressSettingsService
+        private readonly addressSettingsService: AddressSettingsService,
+        private readonly blocksService: BlocksService,
+        private readonly bitcoinRpcService: BitcoinRpcService
     ) { }
 
+    private getCurrentBlockReward(blockHeight: number): number {
+        const BLOCKS_PER_HALVING = 210000;
+        const INITIAL_REWARD = 50;
+        const halvings = Math.floor(blockHeight / BLOCKS_PER_HALVING);
+        return INITIAL_REWARD / Math.pow(2, halvings);
+    }
 
     @Get(':address')
     async getClientInfo(@Param('address') address: string) {
@@ -21,6 +32,11 @@ export class ClientController {
         const workers = await this.clientService.getByAddress(address);
 
         const addressSettings = await this.addressSettingsService.getSettings(address, false);
+
+        const blocksFound = await this.blocksService.getFoundBlocksByAddress(address);
+
+        const miningInfo = await firstValueFrom(this.bitcoinRpcService.newBlock$);
+        const currentBlockReward = this.getCurrentBlockReward(miningInfo.blocks);
 
         return {
             bestDifficulty: addressSettings?.bestDifficulty,
@@ -36,7 +52,14 @@ export class ClientController {
                         lastSeen: worker.updatedAt
                     };
                 })
-            )
+            ),
+            blocksFound,
+            blocksFoundCount: blocksFound.length,
+            currentBlockReward,
+            // Approximation: real reward paid per block can vary slightly (fees included),
+            // this multiplies the current-era subsidy by blocks found. Good enough for a
+            // "total earned" estimate; not a substitute for on-chain verification.
+            totalEarnedEstimate: blocksFound.length * currentBlockReward
         }
     }
 

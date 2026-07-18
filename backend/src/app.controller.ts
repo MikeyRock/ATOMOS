@@ -8,6 +8,7 @@ import { BlocksService } from './ORM/blocks/blocks.service';
 import { ClientStatisticsService } from './ORM/client-statistics/client-statistics.service';
 import { ClientService } from './ORM/client/client.service';
 import { BitcoinRpcService } from './services/bitcoin-rpc.service';
+import { PriceService } from './services/price.service';
 
 @Controller()
 export class AppController {
@@ -21,6 +22,7 @@ export class AppController {
     private readonly blocksService: BlocksService,
     private readonly bitcoinRpcService: BitcoinRpcService,
     private readonly addressSettingsService: AddressSettingsService,
+    private readonly priceService: PriceService,
   ) { }
 
   @Get('info')
@@ -88,6 +90,32 @@ export class AppController {
   public async network() {
     const miningInfo = await firstValueFrom(this.bitcoinRpcService.newBlock$);
     return miningInfo;
+  }
+
+  @Get('price')
+  public async price() {
+    return await this.priceService.getBtcPrice();
+  }
+
+  @Get('halving')
+  public async halving() {
+    const miningInfo = await firstValueFrom(this.bitcoinRpcService.newBlock$);
+    const currentHeight = miningInfo.blocks;
+
+    const BLOCKS_PER_HALVING = 210000;
+    const AVG_MINUTES_PER_BLOCK = 10;
+
+    const nextHalvingHeight = (Math.floor(currentHeight / BLOCKS_PER_HALVING) + 1) * BLOCKS_PER_HALVING;
+    const blocksRemaining = nextHalvingHeight - currentHeight;
+    const estimatedMinutesRemaining = blocksRemaining * AVG_MINUTES_PER_BLOCK;
+    const estimatedDaysRemaining = estimatedMinutesRemaining / (60 * 24);
+
+    return {
+      currentHeight,
+      nextHalvingHeight,
+      blocksRemaining,
+      estimatedDaysRemaining
+    };
   }
 
   @Get('info/chart')

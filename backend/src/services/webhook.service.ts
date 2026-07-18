@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { Block } from 'bitcoinjs-lib';
 
+import { AtomosSettingsService } from '../ORM/atomos-settings/atomos-settings.service';
+
 /**
  * Generic webhook notifier.
  *
@@ -14,64 +16,96 @@ import { Block } from 'bitcoinjs-lib';
  *   - ntfy.sh topics (great for a phone push notification with zero setup)
  *   - your own n8n / Home Assistant / whatever automation endpoint
  *
- * Configure with a single env var: WEBHOOK_URL
- * Optional: WEBHOOK_FORMAT = "discord" | "slack" | "ntfy" | "json" (default "json")
+ * Configuration lives in the database (editable from Settings in the UI),
+ * with WEBHOOK_URL / WEBHOOK_FORMAT env vars used only as the initial
+ * fallback if nothing has been saved yet (e.g. right after a fresh install).
  */
 @Injectable()
 export class WebhookService {
 
-    private url: string | null;
-    private format: string;
+    constructor(
+        private readonly configService: ConfigService,
+        private readonly settingsService: AtomosSettingsService
+    ) { }
 
-    constructor(private readonly configService: ConfigService) {
-        this.url = this.configService.get('WEBHOOK_URL') ?? null;
-        this.format = (this.configService.get('WEBHOOK_FORMAT') ?? 'json').toLowerCase();
+    private async getActiveConfig(): Promise<{ url: string | null; format: string; alerts: { blockFound: boolean; bestDifficulty: boolean; restart: boolean; } }> {
+        const settings = await this.settingsService.getSettings();
 
-        if (this.url == null || this.url.length < 1) {
-            this.url = null;
-            return;
-        }
-        console.log(`Webhook notifier init (format=${this.format})`);
+        const url = settings.discordWebhookUrl
+            ?? this.configService.get('WEBHOOK_URL')
+            ?? null;
+
+        const format = settings.webhookFormat
+            ?? this.configService.get('WEBHOOK_FORMAT')
+            ?? 'discord';
+
+        return {
+            url: (url == null || url.length < 1) ? null : url,
+            format: format.toLowerCase(),
+            alerts: {
+                blockFound: settings.alertBlockFound,
+                bestDifficulty: settings.alertBestDifficulty,
+                restart: settings.alertRestart
+            }
+        };
     }
 
     public async notifyRestarted() {
-        await this.send('🔄 Solo pool server restarted.');
+        const config = await this.getActiveConfig();
+        if (!config.alerts.restart) return;
+        await this.send('🔄 Solo pool server restarted.', config.url, config.format);
     }
 
     public async notifySubscribersBlockFound(address: string, height: number, block: Block, message: string) {
+        const config = await this.getActiveConfig();
+        if (!config.alerts.blockFound) return;
         const text = `⛏️ BLOCK FOUND!\nAddress: ${address}\nHeight: ${height}\nResult: ${message}`;
-        await this.send(text);
+        await this.send(text, config.url, config.format);
     }
 
-    // Optional extra hook: fire on a new best-ever share difficulty for a client.
-    // Wire this in from stratum-v1-jobs.service.ts wherever it tracks best difficulty,
-    // if you want "getting closer" alerts, not just full block-found alerts.
     public async notifyNewBestDifficulty(address: string, difficulty: number) {
+        const config = await this.getActiveConfig();
+        if (!config.alerts.bestDifficulty) return;
         const text = `📈 New best difficulty for ${address}: ${difficulty.toLocaleString()}`;
-        await this.send(text);
+        await this.send(text, config.url, config.format);
     }
 
-    private async send(text: string) {
-        if (this.url == null) {
+    // Called directly from the Settings UI's "Test Webhook" button - bypasses
+    // alert toggles entirely, since a manual test should always fire.
+    public async sendTestMessage(): Promise<{ success: boolean; error?: string }> {
+        const config = await this.getActiveConfig();
+        if (config.url == null) {
+            return { success: false, error: 'No webhook URL configured.' };
+        }
+        try {
+            const payload = this.buildPayload('✅ ATOMOS test alert - if you can see this, your webhook is working.', config.format);
+            await axios.post(config.url, payload, { timeout: 10000 });
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    }
+
+    private async send(text: string, url: string | null, format: string) {
+        if (url == null) {
             return;
         }
 
         try {
-            const payload = this.buildPayload(text);
-            await axios.post(this.url, payload, { timeout: 10000 });
+            const payload = this.buildPayload(text, format);
+            await axios.post(url, payload, { timeout: 10000 });
         } catch (e) {
             console.error('Webhook notify failed', e.message);
         }
     }
 
-    private buildPayload(text: string): any {
-        switch (this.format) {
+    private buildPayload(text: string, format: string): any {
+        switch (format) {
             case 'discord':
                 return { content: text };
             case 'slack':
                 return { text };
             case 'ntfy':
-                // ntfy.sh accepts the raw body as the message text
                 return text;
             default:
                 return { message: text };

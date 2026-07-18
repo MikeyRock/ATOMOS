@@ -1,5 +1,5 @@
 /*
-  ATOMOS cyberpunk theme.
+  ATOMOS cyberpunk theme — v2, neon glow style.
   Drop this file at: frontend/src/assets/layout/styles/theme/atomos-dark/theme.css
   Then in frontend/src/index.html, change the theme-css link href to:
     assets/layout/styles/theme/atomos-dark/theme.css
@@ -9,20 +9,24 @@
 */
 
 :root {
-  --atomos-bg: #0a0a0c;
-  --atomos-surface: #111318;
-  --atomos-border: #1f2229;
+  --atomos-bg: #050810;
+  --atomos-surface: #0c1018;
+  --atomos-border: #1a2230;
   --atomos-text: #e0e2e8;
-  --atomos-text-dim: #6b6f7a;
-  --atomos-teal: #00e5b0;
+  --atomos-text-dim: #8890a0;
+  --atomos-cyan: #00e5ff;
   --atomos-pink: #ff2d8a;
-  --atomos-purple: #7a2ea3;
+  --atomos-teal: #00e5b0;
   --atomos-font-display: 'Orbitron', sans-serif;
   --atomos-font-body: 'Share Tech Mono', monospace;
 }
 
 body {
   background-color: var(--atomos-bg) !important;
+  background-image:
+    linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px) !important;
+  background-size: 24px 24px !important;
   color: var(--atomos-text) !important;
   font-family: var(--atomos-font-body) !important;
 }
@@ -49,18 +53,20 @@ body {
 }
 
 .p-datatable .p-datatable-tbody > tr > td {
-  border-color: #191b20 !important;
+  border-color: #14192426 !important;
 }
 
-/* Stat numbers (hashrate, block height, best difficulty) get the display font */
+/* Stat numbers get the display font + a real neon glow, alternating cyan/pink */
 .stat-value {
   font-family: var(--atomos-font-display) !important;
-  color: var(--atomos-teal) !important;
+  color: var(--atomos-cyan) !important;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
 }
 
 .stat-alert {
   font-family: var(--atomos-font-display) !important;
   color: var(--atomos-pink) !important;
+  text-shadow: 0 0 10px rgba(255, 45, 138, 0.6);
 }
 
 .p-badge-success { color: var(--atomos-teal) !important; }
@@ -68,7 +74,7 @@ body {
 
 /* Links and secondary brand accents */
 a, .p-button-link {
-  color: var(--atomos-purple) !important;
+  color: var(--atomos-cyan) !important;
 }
 
 /* Top bar / logo area */
@@ -79,14 +85,150 @@ a, .p-button-link {
 
 .layout-topbar .app-name {
   font-family: var(--atomos-font-display) !important;
-  color: var(--atomos-teal) !important;
-  letter-spacing: 4px;
-  font-weight: 500;
+  color: var(--atomos-cyan) !important;
+  letter-spacing: 3px;
+  font-weight: 900;
+  text-shadow: 0 0 14px rgba(0, 229, 255, 0.7), 0 0 28px rgba(0, 229, 255, 0.35);
 }
 
 .layout-topbar .app-subtitle {
   font-family: var(--atomos-font-body) !important;
-  color: var(--atomos-purple) !important;
+  color: var(--atomos-pink) !important;
   font-size: 12px;
   letter-spacing: 2px;
+}
+
+/* "Sector tag" style badge — use this class on any status/label chip */
+.atomos-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--atomos-cyan);
+  color: var(--atomos-cyan);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 5px 12px;
+  border-radius: 4px;
+}
+
+/* BTC reward tracker row (price, halving countdown, etc.) */
+.reward-tracker-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.reward-card {
+  background-color: var(--atomos-surface) !important;
+  border: 1px solid var(--atomos-border) !important;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.reward-card.is-accent {
+  border-color: var(--atomos-pink) !important;
+}
+
+.reward-card-label {
+  font-size: 10px;
+  color: var(--atomos-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reward-card-value {
+  font-family: var(--atomos-font-display);
+  font-size: 22px;
+  color: var(--atomos-cyan);
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+  margin-top: 6px;
+}
+
+.reward-card.is-accent .reward-card-value {
+  color: var(--atomos-pink);
+  text-shadow: 0 0 10px rgba(255, 45, 138, 0.5);
+}
+
+.reward-card-value span {
+  font-size: 12px;
+  color: var(--atomos-text-dim);
+  text-shadow: none;
+}
+
+.reward-card-sub {
+  font-size: 11px;
+  color: var(--atomos-text-dim);
+  margin-top: 6px;
+}
+
+.price-change {
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.price-change.is-up { color: var(--atomos-teal); }
+.price-change.is-down { color: var(--atomos-pink); }
+
+@media (max-width: 900px) {
+  .reward-tracker-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Settings dialog */
+.p-dialog {
+  background-color: var(--atomos-surface) !important;
+  border: 1px solid var(--atomos-border) !important;
+}
+
+.p-dialog .p-dialog-header {
+  background-color: var(--atomos-surface) !important;
+  color: var(--atomos-cyan) !important;
+  border-bottom: 1px solid var(--atomos-border) !important;
+}
+
+.p-dialog .p-dialog-content {
+  background-color: var(--atomos-surface) !important;
+  color: var(--atomos-text) !important;
+}
+
+.p-dialog .p-dialog-footer {
+  background-color: var(--atomos-surface) !important;
+  border-top: 1px solid var(--atomos-border) !important;
+}
+
+.settings-section {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-section label {
+  font-size: 12px;
+  color: var(--atomos-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.settings-section small {
+  font-size: 11px;
+  color: var(--atomos-text-dim);
+}
+
+.alert-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--atomos-border);
+  font-size: 13px;
+  color: var(--atomos-text);
+}
+
+.alert-toggle-row:last-child {
+  border-bottom: none;
 }

@@ -1,9 +1,13 @@
+import { of } from 'rxjs';
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AddressSettingsModule } from '../../ORM/address-settings/address-settings.module';
+import { BlocksModule } from '../../ORM/blocks/blocks.module';
 import { ClientStatisticsModule } from '../../ORM/client-statistics/client-statistics.module';
 import { ClientModule } from '../../ORM/client/client.module';
+import { BitcoinRpcService } from '../../services/bitcoin-rpc.service';
 import { ClientController } from './client.controller';
 
 describe('ClientController', () => {
@@ -22,9 +26,18 @@ describe('ClientController', () => {
         }),
         AddressSettingsModule,
         ClientModule,
-        ClientStatisticsModule
+        ClientStatisticsModule,
+        BlocksModule
       ],
       controllers: [ClientController],
+      providers: [
+        {
+          provide: BitcoinRpcService,
+          useValue: {
+            newBlock$: of({ blocks: 900000, difficulty: 1, networkhashps: 1 })
+          }
+        }
+      ]
 
     }).compile();
 

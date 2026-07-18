@@ -19,6 +19,37 @@
             </div>
         </div>
 
+        <div class="col-12">
+            <div class="reward-tracker-row">
+                <div class="card reward-card">
+                    <div class="reward-card-label"><i class="pi pi-bitcoin"></i> BTC Reward Tracker</div>
+                    <div class="reward-card-value">3.12500000 <span>BTC</span></div>
+                    <div class="reward-card-sub">Total block reward</div>
+                </div>
+
+                <div class="card reward-card" *ngIf="btcPrice$ | async as price">
+                    <div class="reward-card-value">${{price.usd | number:'1.2-2'}}</div>
+                    <div class="reward-card-sub">
+                        BTC / USD
+                        <span class="price-change" [ngClass]="price.usd_24h_change >= 0 ? 'is-up' : 'is-down'">
+                            {{price.usd_24h_change >= 0 ? '▲' : '▼'}} {{price.usd_24h_change | number:'1.2-2'}}%
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card reward-card" *ngIf="btcPrice$ | async as price">
+                    <div class="reward-card-value">${{(price.usd * 3.125) | number:'1.2-2'}}</div>
+                    <div class="reward-card-sub">≈ per block reward</div>
+                </div>
+
+                <div class="card reward-card is-accent" *ngIf="halvingInfo$ | async as halving">
+                    <div class="reward-card-label">Next Halving</div>
+                    <div class="reward-card-value">~{{halving.estimatedDaysRemaining | number:'1.0-1'}} <span>days</span></div>
+                    <div class="reward-card-sub">Est. time to block {{halving.nextHalvingHeight | number}}</div>
+                </div>
+            </div>
+        </div>
+
         <div class="col-12" *ngIf="networkInfo$ | async as networkInfo">
             <div class="card snapshot-card">
                 <ng-container *ngIf="clientInfoByPayoutMode$ | async as modeInfo">

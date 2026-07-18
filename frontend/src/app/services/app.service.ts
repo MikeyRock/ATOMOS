@@ -31,6 +31,12 @@ export class AppService {
     public getAccounting(payoutMode?: PayoutMode | 'all') {
         return this.httpClient.get(`${this.appConfig.apiUrl}/api/info/accounting${this.toPayoutModeQuery(payoutMode)}`) as Observable<any>;
     }
+    public getBtcPrice() {
+        return this.httpClient.get(`${this.appConfig.apiUrl}/api/price`) as Observable<{ usd: number; usd_24h_change: number; updatedAt: number; }>;
+    }
+    public getHalvingInfo() {
+        return this.httpClient.get(`${this.appConfig.apiUrl}/api/halving`) as Observable<{ currentHeight: number; nextHalvingHeight: number; blocksRemaining: number; estimatedDaysRemaining: number; }>;
+    }
 
     private toPayoutModeQuery(payoutMode?: PayoutMode | 'all'): string {
         return payoutMode == null ? '' : `?payoutMode=${encodeURIComponent(payoutMode)}`;

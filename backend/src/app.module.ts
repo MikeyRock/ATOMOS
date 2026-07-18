@@ -8,8 +8,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AddressController } from './controllers/address/address.controller';
 import { ClientController } from './controllers/client/client.controller';
+import { SettingsController } from './controllers/settings/settings.controller';
 import { BitcoinAddressValidator } from './models/validators/bitcoin-address.validator';
 import { AddressSettingsModule } from './ORM/address-settings/address-settings.module';
+import { AtomosSettingsModule } from './ORM/atomos-settings/atomos-settings.module';
 import { BlocksModule } from './ORM/blocks/blocks.module';
 import { ClientStatisticsModule } from './ORM/client-statistics/client-statistics.module';
 import { ClientModule } from './ORM/client/client.module';
@@ -21,6 +23,7 @@ import { BraiinsService } from './services/braiins.service';
 import { BTCPayService } from './services/btc-pay.service';
 import { DiscordService } from './services/discord.service';
 import { WebhookService } from './services/webhook.service';
+import { PriceService } from './services/price.service';
 import { NotificationService } from './services/notification.service';
 import { StratumV1JobsService } from './services/stratum-v1-jobs.service';
 import { StratumV1Service } from './services/stratum-v1.service';
@@ -33,6 +36,7 @@ const ORMModules = [
     ClientStatisticsModule,
     ClientModule,
     AddressSettingsModule,
+    AtomosSettingsModule,
     TelegramSubscriptionsModule,
     BlocksModule,
     RpcBlocksModule,
@@ -61,11 +65,13 @@ const ORMModules = [
         AppController,
         ClientController,
         AddressController,
-        ExternalShareController
+        ExternalShareController,
+        SettingsController
     ],
     providers: [
         DiscordService,
         WebhookService,
+        PriceService,
         AppService,
         StratumV1Service,
         TelegramService,

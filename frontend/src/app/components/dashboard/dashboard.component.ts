@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Table } from 'primeng/table';
-import { combineLatest, forkJoin, map, Observable, shareReplay } from 'rxjs';
+import { combineLatest, forkJoin, interval, map, Observable, shareReplay, startWith, switchMap } from 'rxjs';
 
 import { HashSuffixPipe } from '../../pipes/hash-suffix.pipe';
 import { AppService } from '../../services/app.service';
@@ -28,6 +28,9 @@ export class DashboardComponent implements AfterViewInit {
   public networkInfo$: Observable<any>;
   private networkInfo:any;
 
+  public btcPrice$: Observable<{ usd: number; usd_24h_change: number; updatedAt: number; }>;
+  public halvingInfo$: Observable<{ currentHeight: number; nextHalvingHeight: number; blocksRemaining: number; estimatedDaysRemaining: number; }>;
+
   @ViewChild('dataTable') dataTable!: Table;
 
   public expandedRows$: Observable<any>;
@@ -41,6 +44,20 @@ export class DashboardComponent implements AfterViewInit {
   ) {
 
     this.networkInfo$ = this.appService.getNetworkInfo().pipe(
+      shareReplay({ refCount: true, bufferSize: 1 })
+    );
+
+    // Refresh every 60s to match the backend's price cache window
+    this.btcPrice$ = interval(60 * 1000).pipe(
+      startWith(0),
+      switchMap(() => this.appService.getBtcPrice()),
+      shareReplay({ refCount: true, bufferSize: 1 })
+    );
+
+    // Halving moves slowly (~every 10 min per block); refresh every 5 min is plenty
+    this.halvingInfo$ = interval(5 * 60 * 1000).pipe(
+      startWith(0),
+      switchMap(() => this.appService.getHalvingInfo()),
       shareReplay({ refCount: true, bufferSize: 1 })
     );
 
@@ -210,6 +227,18 @@ export class DashboardComponent implements AfterViewInit {
       return pre += now - new Date(cur.startTime).getTime();
     }, 0);
     return new Date(now - sum);
+  }
+
+  public getTotalHashRateAll(workers: any[]): number {
+    if (workers == null) return 0;
+    return workers.reduce((sum, w) => sum + Math.floor(w.hashRate || 0), 0);
+  }
+
+  public getYourNetworkSharePercent(yourHashRate: number, networkInfo: any): number {
+    if (networkInfo == null || networkInfo.networkhashps == null || yourHashRate <= 0) {
+      return 0;
+    }
+    return (yourHashRate / networkInfo.networkhashps) * 100;
   }
 
   private toChartPoint(point: any) {

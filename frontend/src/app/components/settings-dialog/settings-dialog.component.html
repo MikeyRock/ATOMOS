@@ -1,0 +1,51 @@
+<p-dialog header="Settings" [(visible)]="visible" [modal]="true" [style]="{width: '480px'}"
+    (onShow)="onShow()" (visibleChange)="visibleChange.emit($event)">
+
+    <div class="settings-section">
+        <label for="webhookUrl">Discord Webhook URL</label>
+        <input pInputText id="webhookUrl" type="password" [(ngModel)]="settings.discordWebhookUrl"
+            [placeholder]="settings.hasWebhookConfigured ? '••••••••••••••••••••  (saved - leave blank to keep it)' : 'https://discord.com/api/webhooks/...'"
+            class="w-full" />
+        <small>From Discord: Server Settings &gt; Integrations &gt; Webhooks &gt; New Webhook &gt; Copy URL.</small>
+    </div>
+
+    <div class="settings-section">
+        <label for="btcAddress">BTC Address</label>
+        <input pInputText id="btcAddress" type="text" [(ngModel)]="settings.btcAddress"
+            placeholder="bc1q..." class="w-full" />
+        <small>Used as the default address this dashboard opens to.</small>
+    </div>
+
+    <div class="settings-section">
+        <button pButton type="button" label="Test Webhook" icon="pi pi-send" class="p-button-outlined"
+            [loading]="isTesting" (click)="testWebhook()"></button>
+        <small>Sends a test message to whatever webhook is currently saved on the server - save changes above first if you just entered a new URL.</small>
+    </div>
+
+    <div class="settings-section">
+        <label>Alerts</label>
+
+        <div class="alert-toggle-row">
+            <span>Block found</span>
+            <p-inputSwitch [(ngModel)]="settings.alertBlockFound"></p-inputSwitch>
+        </div>
+
+        <div class="alert-toggle-row">
+            <span>New best difficulty</span>
+            <p-inputSwitch [(ngModel)]="settings.alertBestDifficulty"></p-inputSwitch>
+        </div>
+
+        <div class="alert-toggle-row">
+            <span>Server restart</span>
+            <p-inputSwitch [(ngModel)]="settings.alertRestart"></p-inputSwitch>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton type="button" label="Cancel" class="p-button-text" (click)="close()"></button>
+        <button pButton type="button" label="Save" icon="pi pi-check" [loading]="isSaving" (click)="save()"></button>
+    </ng-template>
+
+</p-dialog>
+
+<p-toast></p-toast>

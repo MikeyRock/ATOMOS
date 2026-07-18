@@ -14,6 +14,12 @@
         <i class="pi pi-ellipsis-v"></i>
     </button>
 
+    <button class="p-link layout-topbar-button" (click)="settingsVisible = true" title="Settings">
+        <i class="pi pi-cog"></i>
+    </button>
+
+    <app-settings-dialog [(visible)]="settingsVisible"></app-settings-dialog>
+
     <!-- <div #topbarmenu class="layout-topbar-menu"
         [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
          <button class="p-link layout-topbar-button">
