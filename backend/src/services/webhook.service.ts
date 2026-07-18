@@ -101,7 +101,6 @@ export class WebhookService {
             title: 'BLOCK FOUND!',
             lines: [
                 ['Worker', worker || 'unknown'],
-                ['Address', address],
                 ['Height', height.toLocaleString()],
                 ['Result', message]
             ],
@@ -116,8 +115,7 @@ export class WebhookService {
             emoji: '🎯',
             title: `${worker || 'Worker'} — New Personal Best!`,
             lines: [
-                ['Best difficulty', WebhookService.formatSuffix(difficulty)],
-                ['Address', address]
+                ['Best difficulty', WebhookService.formatSuffix(difficulty)]
             ],
             color: 0x00e5b0
         }, config.url, config.format);

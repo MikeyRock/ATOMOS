@@ -30,6 +30,7 @@ export class DashboardComponent implements AfterViewInit {
 
   public btcPrice$: Observable<{ usd: number; usd_24h_change: number; updatedAt: number; }>;
   public halvingInfo$: Observable<{ currentHeight: number; nextHalvingHeight: number; blocksRemaining: number; estimatedDaysRemaining: number; }>;
+  public serverInfo$: Observable<any>;
 
   public chartRangeHours$ = new BehaviorSubject<number>(24);
 
@@ -54,6 +55,11 @@ export class DashboardComponent implements AfterViewInit {
 
     this.networkInfo$ = refreshTick$.pipe(
       switchMap(() => this.appService.getNetworkInfo()),
+      shareReplay({ refCount: true, bufferSize: 1 })
+    );
+
+    this.serverInfo$ = refreshTick$.pipe(
+      switchMap(() => this.appService.getInfo()),
       shareReplay({ refCount: true, bufferSize: 1 })
     );
 
