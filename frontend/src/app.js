@@ -127,15 +127,93 @@
     complete();
   }
 
+  // ---------- Confetti ----------
+  var confettiCanvas = document.getElementById('confetti-canvas');
+  var confettiCtx = confettiCanvas ? confettiCanvas.getContext('2d') : null;
+  var confettiParticles = [];
+  var confettiAnimationId = null;
+  var confettiColors = ['#00e5ff', '#ff2d8a', '#00e5b0', '#e0e2e8', '#ffd700'];
+
+  function resizeConfettiCanvas() {
+    if (!confettiCanvas) return;
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+
+  function spawnConfettiParticles() {
+    confettiParticles = [];
+    var count = 160;
+    for (var i = 0; i < count; i++) {
+      confettiParticles.push({
+        x: Math.random() * window.innerWidth,
+        y: -20 - Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 2 + Math.random() * 3,
+        size: 5 + Math.random() * 6,
+        color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+        rotation: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 10
+      });
+    }
+  }
+
+  function animateConfetti() {
+    if (!confettiCtx) return;
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+    confettiParticles.forEach(function (p) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rotation += p.rotationSpeed;
+
+      if (p.y > confettiCanvas.height + 20) {
+        p.y = -20;
+        p.x = Math.random() * confettiCanvas.width;
+      }
+
+      confettiCtx.save();
+      confettiCtx.translate(p.x, p.y);
+      confettiCtx.rotate((p.rotation * Math.PI) / 180);
+      confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      confettiCtx.restore();
+    });
+
+    confettiAnimationId = requestAnimationFrame(animateConfetti);
+  }
+
+  function startConfetti() {
+    if (!confettiCtx) return;
+    resizeConfettiCanvas();
+    spawnConfettiParticles();
+    if (confettiAnimationId == null) {
+      animateConfetti();
+    }
+  }
+
+  function stopConfetti() {
+    if (confettiAnimationId != null) {
+      cancelAnimationFrame(confettiAnimationId);
+      confettiAnimationId = null;
+    }
+    if (confettiCtx) {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    }
+  }
+
+  window.addEventListener('resize', resizeConfettiCanvas);
+
   // ---------- Block-found overlay ----------
   var BLOCK_COUNT_KEY = 'atomos-last-cleared-block-count';
 
   function showBlockFoundOverlay() {
     document.getElementById('block-found-overlay').style.display = 'flex';
+    startConfetti();
   }
 
   function hideBlockFoundOverlay(persistCount) {
     document.getElementById('block-found-overlay').style.display = 'none';
+    stopConfetti();
     if (persistCount != null) {
       localStorage.setItem(BLOCK_COUNT_KEY, String(persistCount));
     }
