@@ -3,7 +3,7 @@ id: atomos-pool
 category: bitcoin
 name: ATOMOS
 icon: https://raw.githubusercontent.com/MikeyRock/ATOMOS/main/atomos-pool/icon.svg
-version: "3.7.0"
+version: "3.8.0"
 tagline: My own branded solo Bitcoin mining pool
 description: >-
   A self-hosted solo Bitcoin mining pool. The mining/stratum backend is
@@ -22,12 +22,10 @@ gallery:
   - 2.jpg
 path: ""
 releaseNotes: >-
-  v3.7.0: likely found the real cause behind still not working reports,
-  no cache-control headers existed anywhere, meaning browsers had no
-  signal to ever re-download updated files. Added no-cache headers plus
-  version-busted asset URLs to force fresh downloads on every update.
-  Also added console logging to the hashrate chart fetch for easier
-  diagnosis going forward.
+  v3.8.0: replaced the hashrate chart entirely with a Peak Share Difficulty
+  bar chart (24H/3D/7D range buttons, hover tooltip showing peak diff,
+  shares, and worker name per time bucket) - uses a new, more reliable
+  data source that populates as shares come in.
 defaultPassword: ""
 widgets:
   - id: "stats"
