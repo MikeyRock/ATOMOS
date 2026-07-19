@@ -50,6 +50,36 @@ export class ClientStatisticsService {
         return Number(result?.total) || 0;
     }
 
+    public async getPeakDifficultyHistory(address: string, rangeHours: number): Promise<{ time: number; peakDifficulty: number; worker: string; totalShares: number }[]> {
+        const cutoff = new Date();
+        cutoff.setTime(cutoff.getTime() - (rangeHours * 60 * 60 * 1000));
+
+        // SQLite has a documented "bare column" behavior: in a query with
+        // exactly one MAX()/MIN() aggregate, any other non-aggregated,
+        // non-grouped column takes its value from the same row that
+        // produced the max/min - so `clientName` here correctly reflects
+        // whichever worker actually achieved that bucket's peak, not an
+        // arbitrary row. SUM() is a real aggregate independent of that
+        // behavior, so totalShares is always a true per-bucket sum.
+        const query = `
+            SELECT
+                time,
+                MAX(shares) AS peakDifficulty,
+                clientName AS worker,
+                SUM(acceptedCount) AS totalShares
+            FROM
+                client_statistics_entity AS entry
+            WHERE
+                entry.address = ? AND entry.time > ?
+            GROUP BY
+                time
+            ORDER BY
+                time
+        `;
+
+        return await this.clientStatisticsRepository.query(query, [address, cutoff.getTime()]);
+    }
+
     public async deleteOldStatistics() {
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

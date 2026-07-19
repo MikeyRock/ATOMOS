@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Post, Query } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 
 import { AddressSettingsService } from '../../ORM/address-settings/address-settings.service';
@@ -84,6 +84,18 @@ export class ClientController {
         const wasLiveReset = this.activeClientRegistry.resetBestDifficulty(sessionId);
 
         return { success: true, wasConnected: wasLiveReset };
+    }
+
+    @Get(':address/difficulty-history')
+    async getDifficultyHistory(@Param('address') address: string, @Query('range') range?: string) {
+        const rangeHoursMap: { [key: string]: number } = {
+            '24h': 24,
+            '3d': 24 * 3,
+            '7d': 24 * 7
+        };
+        const rangeHours = rangeHoursMap[range] ?? 24;
+
+        return await this.clientStatisticsService.getPeakDifficultyHistory(address, rangeHours);
     }
 
     @Get(':address/chart')

@@ -7,7 +7,7 @@
 
   var refreshTimers = [];
   var chartInstance = null;
-  var chartRangeHours = 24;
+  var chartRange = '24h';
   var currentAddress = null;
 
   // ---------- Formatters (same conventions as the original dashboard) ----------
@@ -335,14 +335,14 @@
 
       '  <div class="card">' +
       '    <div class="card-header">' +
-      '      <div><h4>Hashrate (Live)</h4><span>10-minute credited work.</span></div>' +
+      '      <div><h4>Peak Share Difficulty</h4><span id="peak-diff-summary">-</span></div>' +
       '      <div class="range-toggle">' +
-      '        <button data-range="1">1H</button>' +
-      '        <button data-range="3">3H</button>' +
-      '        <button data-range="24" class="active">24H</button>' +
+      '        <button data-range="24h" class="active">24H</button>' +
+      '        <button data-range="3d">3D</button>' +
+      '        <button data-range="7d">7D</button>' +
       '      </div>' +
       '    </div>' +
-      '    <div class="chart-container"><canvas id="hashrate-chart"></canvas><div id="chart-placeholder" class="chart-placeholder"><div class="scan-bar"></div><span id="chart-placeholder-text">Collecting hashrate data&#8230;</span></div></div>' +
+      '    <div class="chart-container"><canvas id="hashrate-chart"></canvas><div id="chart-placeholder" class="chart-placeholder"><div class="scan-bar"></div><span id="chart-placeholder-text">Collecting share data&#8230;</span></div></div>' +
       '  </div>' +
 
       '  <div class="panel-row">' +
@@ -372,7 +372,7 @@
       btn.addEventListener('click', function () {
         document.querySelectorAll('.range-toggle button').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
-        chartRangeHours = Number(btn.getAttribute('data-range'));
+        chartRange = btn.getAttribute('data-range');
         refreshChart();
       });
     });
@@ -515,14 +515,11 @@
   }
 
   function refreshChart() {
-    apiGet('/client/' + encodeURIComponent(currentAddress) + '/chart').then(function (data) {
-      console.log('[ATOMOS] /chart raw response:', data);
-      var cutoff = Date.now() - (chartRangeHours * 60 * 60 * 1000);
-      var filtered = (data || []).filter(function (point) { return Number(point.label) >= cutoff; });
-      console.log('[ATOMOS] /chart filtered (range=' + chartRangeHours + 'h):', filtered);
-      renderChart(filtered, null);
+    apiGet('/client/' + encodeURIComponent(currentAddress) + '/difficulty-history?range=' + chartRange).then(function (data) {
+      console.log('[ATOMOS] /difficulty-history raw response (range=' + chartRange + '):', data);
+      renderChart(data || [], null);
     }).catch(function (err) {
-      console.error('[ATOMOS] /chart request failed:', err);
+      console.error('[ATOMOS] /difficulty-history request failed:', err);
       renderChart([], 'error');
     });
   }
@@ -531,6 +528,7 @@
     var ctx = document.getElementById('hashrate-chart');
     var placeholder = document.getElementById('chart-placeholder');
     var placeholderText = document.getElementById('chart-placeholder-text');
+    var summaryEl = document.getElementById('peak-diff-summary');
     if (!ctx || typeof Chart === 'undefined') return;
 
     if (points.length === 0) {
@@ -538,47 +536,82 @@
         placeholder.style.display = 'flex';
         if (placeholderText) {
           placeholderText.textContent = state === 'error'
-            ? 'Could not load hashrate data - retrying...'
-            : 'Collecting hashrate data\u2026 (fills in as 10-minute buckets accumulate)';
+            ? 'Could not load share data - retrying...'
+            : 'Collecting share data\u2026 (fills in as shares are submitted)';
         }
         placeholder.classList.toggle('is-error', state === 'error');
       }
+      if (summaryEl) summaryEl.textContent = '-';
       return;
     }
 
     if (placeholder) placeholder.style.display = 'none';
 
-    var labels = points.map(function (p) { return new Date(Number(p.label)).toLocaleTimeString(); });
-    var values = points.map(function (p) { return Number(p.data) || 0; });
+    var bestPoint = points.reduce(function (best, p) {
+      return (Number(p.peakDifficulty) > Number(best.peakDifficulty)) ? p : best;
+    }, points[0]);
+
+    if (summaryEl) {
+      summaryEl.innerHTML = numberSuffix(bestPoint.peakDifficulty) + ' <strong style="color:var(--text);font-weight:400;">best</strong> \u00b7 ' + chartRange.toUpperCase();
+    }
+
+    var labels = points.map(function (p) {
+      var d = new Date(Number(p.time));
+      return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    });
+    var values = points.map(function (p) { return Number(p.peakDifficulty) || 0; });
 
     if (chartInstance) {
       chartInstance.data.labels = labels;
       chartInstance.data.datasets[0].data = values;
+      chartInstance.data.datasets[0]._points = points;
       chartInstance.update('none');
       return;
     }
 
     chartInstance = new Chart(ctx, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: labels,
         datasets: [{
-          label: 'Hashrate',
+          label: 'Peak Difficulty',
           data: values,
-          borderColor: '#00e5b0',
-          backgroundColor: 'rgba(0, 229, 176, 0.08)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 0
+          _points: points,
+          backgroundColor: '#00e5ff',
+          borderRadius: 2,
+          maxBarThickness: 14
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0c1018',
+            borderColor: '#1a2230',
+            borderWidth: 1,
+            titleColor: '#e0e2e8',
+            bodyColor: '#8890a0',
+            padding: 10,
+            callbacks: {
+              title: function (items) {
+                return items[0].label;
+              },
+              label: function (item) {
+                var p = item.dataset._points[item.dataIndex];
+                return [
+                  'Peak diff: ' + numberSuffix(p.peakDifficulty),
+                  'Shares: ' + (p.totalShares != null ? Number(p.totalShares).toLocaleString() : '-'),
+                  'Worker: ' + (p.worker || 'unknown')
+                ];
+              }
+            }
+          }
+        },
         scales: {
-          x: { ticks: { color: '#8890a0', maxTicksLimit: 8 }, grid: { color: '#1a2230' } },
-          y: { ticks: { color: '#8890a0', callback: function (value) { return hashSuffix(value); } }, grid: { color: '#1a2230' } }
+          x: { ticks: { color: '#8890a0', maxTicksLimit: 8 }, grid: { display: false } },
+          y: { ticks: { color: '#8890a0', callback: function (value) { return numberSuffix(value); } }, grid: { color: '#1a2230' } }
         }
       }
     });
