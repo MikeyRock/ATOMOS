@@ -3,7 +3,7 @@ id: atomos-pool
 category: bitcoin
 name: ATOMOS
 icon: https://raw.githubusercontent.com/MikeyRock/ATOMOS/main/atomos-pool/icon.svg
-version: "3.0.0"
+version: "3.3.0"
 tagline: My own branded solo Bitcoin mining pool
 description: >-
   A self-hosted solo Bitcoin mining pool. The mining/stratum backend is
