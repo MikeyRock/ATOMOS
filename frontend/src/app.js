@@ -288,7 +288,7 @@
       '  <div class="card header-bar">' +
       '    <div class="header-address"><span>Address</span><div>' + currentAddress + '</div></div>' +
       '    <div class="header-status">' +
-      '      <span class="status-pill is-live" id="node-status">&#9679; Checking node...</span>' +
+      '      <span class="status-pill is-live" id="node-status"><span class="live-dot"></span> Checking node...</span>' +
       '      <span class="status-pill" id="uptime-status">Uptime -</span>' +
       '    </div>' +
       '  </div>' +
@@ -342,7 +342,7 @@
       '        <button data-range="24" class="active">24H</button>' +
       '      </div>' +
       '    </div>' +
-      '    <div class="chart-container"><canvas id="hashrate-chart"></canvas></div>' +
+      '    <div class="chart-container"><canvas id="hashrate-chart"></canvas><div id="chart-placeholder" class="chart-placeholder"><div class="scan-bar"></div><span id="chart-placeholder-text">Collecting hashrate data&#8230;</span></div></div>' +
       '  </div>' +
 
       '  <div class="panel-row">' +
@@ -456,9 +456,9 @@
         updateBlockProbability(totalHashRate, lastNetworkInfo, info.bestDifficulty);
       }
 
-      document.getElementById('node-status').innerHTML = '&#9679; Node Connected';
+      document.getElementById('node-status').innerHTML = '<span class="live-dot"></span> Node Connected';
     }).catch(function () {
-      document.getElementById('node-status').innerHTML = '&#9679; Connection Error';
+      document.getElementById('node-status').innerHTML = '<span class="live-dot is-error"></span> Connection Error';
     });
   }
 
@@ -513,13 +513,32 @@
     apiGet('/client/' + encodeURIComponent(currentAddress) + '/chart').then(function (data) {
       var cutoff = Date.now() - (chartRangeHours * 60 * 60 * 1000);
       var filtered = (data || []).filter(function (point) { return Number(point.label) >= cutoff; });
-      renderChart(filtered);
-    }).catch(function () { /* leave existing chart in place */ });
+      renderChart(filtered, null);
+    }).catch(function () {
+      renderChart([], 'error');
+    });
   }
 
-  function renderChart(points) {
+  function renderChart(points, state) {
     var ctx = document.getElementById('hashrate-chart');
+    var placeholder = document.getElementById('chart-placeholder');
+    var placeholderText = document.getElementById('chart-placeholder-text');
     if (!ctx || typeof Chart === 'undefined') return;
+
+    if (points.length === 0) {
+      if (placeholder) {
+        placeholder.style.display = 'flex';
+        if (placeholderText) {
+          placeholderText.textContent = state === 'error'
+            ? 'Could not load hashrate data - retrying...'
+            : 'Collecting hashrate data\u2026 (fills in as 10-minute buckets accumulate)';
+        }
+        placeholder.classList.toggle('is-error', state === 'error');
+      }
+      return;
+    }
+
+    if (placeholder) placeholder.style.display = 'none';
 
     var labels = points.map(function (p) { return new Date(Number(p.label)).toLocaleTimeString(); });
     var values = points.map(function (p) { return Number(p.data) || 0; });
