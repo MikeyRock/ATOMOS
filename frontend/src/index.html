@@ -1,21 +1,27 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <title>ATOMOS</title>
-  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link id="theme-css" rel="stylesheet" type="text/css" href="assets/layout/styles/theme/atomos-dark/theme.css">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="stylesheet" href="style.css">
+  <script src="assets/chart.umd.js"></script>
   <script src="assets/runtime-config.js"></script>
 </head>
-
 <body>
-  <app-root></app-root>
+
+  <div id="topbar" class="topbar">
+    <a class="topbar-logo" href="/"><img src="assets/logo.svg" alt="ATOMOS - Solo Mining"></a>
+    <div class="topbar-actions">
+      <button id="settings-btn" title="Settings">&#9881;</button>
+    </div>
+  </div>
+
+  <div id="app-root"></div>
+
+  <div id="toast-container"></div>
+
+  <script src="app.js"></script>
 </body>
-
-
 </html>
