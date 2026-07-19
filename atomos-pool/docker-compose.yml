@@ -6,15 +6,15 @@ services:
       APP_PORT: 80
       PROXY_AUTH_WHITELIST: "/api/*"
   web:
-    image: mikeyrocks/atomos-ui:1.8.0
+    image: mikeyrocks/atomos-ui:3.0.0
     restart: on-failure
     stop_grace_period: 30s
     environment:
       - DOMAIN=$DEVICE_DOMAIN_NAME
-      - PUBLIC_POOL_API_URL=
-      - PUBLIC_POOL_STRATUM_URL=${DEVICE_DOMAIN_NAME}:2018
+      - ATOMOS_API_URL=
+      - ATOMOS_STRATUM_URL=${DEVICE_DOMAIN_NAME}:2018
   server:
-    image: mikeyrocks/atomos:1.8.0
+    image: mikeyrocks/atomos:3.0.0
     restart: on-failure
     stop_grace_period: 30s
     ports:
