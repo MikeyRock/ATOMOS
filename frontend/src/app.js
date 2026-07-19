@@ -385,8 +385,10 @@
       var btn = e.target.closest('.reset-diff-btn');
       if (!btn) return;
 
-      var sessionId = btn.getAttribute('data-session-id');
+      var sessionIds = (btn.getAttribute('data-session-ids') || '').split(',').filter(Boolean);
       var workerName = btn.getAttribute('data-worker-name');
+
+      if (sessionIds.length === 0) return;
 
       if (!confirm('Reset best difficulty for ' + workerName + '? This cannot be undone.')) {
         return;
@@ -395,7 +397,9 @@
       btn.disabled = true;
       btn.textContent = '...';
 
-      apiPost('/client/' + encodeURIComponent(currentAddress) + '/' + encodeURIComponent(sessionId) + '/reset-difficulty')
+      Promise.all(sessionIds.map(function (sessionId) {
+        return apiPost('/client/' + encodeURIComponent(currentAddress) + '/' + encodeURIComponent(sessionId) + '/reset-difficulty');
+      }))
         .then(function () {
           showToast('Best difficulty reset for ' + workerName + '.');
           refreshClientInfo();
@@ -435,16 +439,17 @@
     apiGet('/client/' + encodeURIComponent(currentAddress)).then(function (info) {
       lastClientInfo = info;
 
-      var totalHashRate = (info.workers || []).reduce(function (sum, w) { return sum + Math.floor(w.hashRate || 0); }, 0);
+      var activeGrouped = getActiveGroupedWorkers(info.workers || []);
+      var totalHashRate = activeGrouped.reduce(function (sum, w) { return sum + w.hashRate; }, 0);
 
       setText('stat-hashrate', hashSuffix(totalHashRate));
-      setText('stat-workers', info.workersCount != null ? info.workersCount : 0);
+      setText('stat-workers', activeGrouped.length);
       setText('stat-blocks', info.blocksFoundCount != null ? info.blocksFoundCount : 0);
       setText('stat-reward', info.currentBlockReward != null ? info.currentBlockReward.toFixed(3) : '-');
       setText('stat-earned', info.totalEarnedEstimate != null ? info.totalEarnedEstimate.toFixed(8) : '-');
       setText('net-best-diff', numberSuffix(info.bestDifficulty));
       setText('panel-shares', info.acceptedSharesLast24h != null ? info.acceptedSharesLast24h.toLocaleString() : '-');
-      setText('panel-workers', info.workersCount != null ? info.workersCount : 0);
+      setText('panel-workers', activeGrouped.length);
       setText('panel-best-hash', numberSuffix(info.bestDifficulty));
       setText('footer-best', numberSuffix(info.bestDifficulty));
 
@@ -473,7 +478,7 @@
       setText('footer-stratum', 'STRATUM: CONNECTED');
 
       if (lastClientInfo) {
-        var totalHashRate = (lastClientInfo.workers || []).reduce(function (sum, w) { return sum + Math.floor(w.hashRate || 0); }, 0);
+        var totalHashRate = getActiveGroupedWorkers(lastClientInfo.workers || []).reduce(function (sum, w) { return sum + w.hashRate; }, 0);
         updateBlockProbability(totalHashRate, info, lastClientInfo.bestDifficulty);
       }
     }).catch(function () {
@@ -511,10 +516,13 @@
 
   function refreshChart() {
     apiGet('/client/' + encodeURIComponent(currentAddress) + '/chart').then(function (data) {
+      console.log('[ATOMOS] /chart raw response:', data);
       var cutoff = Date.now() - (chartRangeHours * 60 * 60 * 1000);
       var filtered = (data || []).filter(function (point) { return Number(point.label) >= cutoff; });
+      console.log('[ATOMOS] /chart filtered (range=' + chartRangeHours + 'h):', filtered);
       renderChart(filtered, null);
-    }).catch(function () {
+    }).catch(function (err) {
+      console.error('[ATOMOS] /chart request failed:', err);
       renderChart([], 'error');
     });
   }
@@ -576,26 +584,66 @@
     });
   }
 
+  var INACTIVE_CUTOFF_MS = 3 * 60 * 1000;
+
+  // Shared by the stat cards and the table, so both always agree on what
+  // counts as "active" and never show conflicting numbers.
+  function getActiveGroupedWorkers(workers) {
+    var now = Date.now();
+
+    var active = (workers || []).filter(function (w) {
+      var lastSeenMs = new Date(w.lastSeen).getTime();
+      return (now - lastSeenMs) < INACTIVE_CUTOFF_MS;
+    });
+
+    var groups = {};
+    active.forEach(function (w) {
+      var key = w.name || 'unknown';
+      if (!groups[key]) {
+        groups[key] = {
+          name: key,
+          hashRate: 0,
+          bestDifficulty: 0,
+          lastSeen: w.lastSeen,
+          sessionIds: []
+        };
+      }
+      var g = groups[key];
+      g.hashRate += Math.floor(w.hashRate || 0);
+      g.bestDifficulty = Math.max(g.bestDifficulty, Number(w.bestDifficulty) || 0);
+      if (new Date(w.lastSeen).getTime() > new Date(g.lastSeen).getTime()) {
+        g.lastSeen = w.lastSeen;
+      }
+      g.sessionIds.push(w.sessionId);
+    });
+
+    var grouped = Object.keys(groups).map(function (key) { return groups[key]; });
+
+    grouped.sort(function (a, b) {
+      return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    return grouped;
+  }
+
   function renderWorkerTable(workers) {
     var tbody = document.getElementById('worker-table-body');
     if (!tbody) return;
 
-    if (workers.length === 0) {
+    var grouped = getActiveGroupedWorkers(workers);
+
+    if (grouped.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5">No workers connected yet.</td></tr>';
       return;
     }
 
-    var sortedWorkers = workers.slice().sort(function (a, b) {
-      return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
-    });
-
-    tbody.innerHTML = sortedWorkers.map(function (w) {
+    tbody.innerHTML = grouped.map(function (w) {
       return '<tr>' +
         '<td>' + escapeHtml(w.name) + ' <span class="solo-badge">SOLO</span></td>' +
         '<td class="numeric-cell">' + hashSuffix(w.hashRate) + '</td>' +
         '<td class="numeric-cell">' + numberSuffix(w.bestDifficulty) + '</td>' +
         '<td class="numeric-cell">' + dateAgo(w.lastSeen) + '</td>' +
-        '<td class="numeric-cell"><button class="reset-diff-btn" data-session-id="' + escapeHtml(w.sessionId) + '" data-worker-name="' + escapeHtml(w.name) + '">Reset</button></td>' +
+        '<td class="numeric-cell"><button class="reset-diff-btn" data-session-ids="' + escapeHtml(w.sessionIds.join(',')) + '" data-worker-name="' + escapeHtml(w.name) + '">Reset</button></td>' +
         '</tr>';
     }).join('');
   }
