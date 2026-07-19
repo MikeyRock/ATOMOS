@@ -24,6 +24,7 @@ import { BTCPayService } from './services/btc-pay.service';
 import { DiscordService } from './services/discord.service';
 import { WebhookService } from './services/webhook.service';
 import { PriceService } from './services/price.service';
+import { ActiveClientRegistryService } from './services/active-client-registry.service';
 import { NotificationService } from './services/notification.service';
 import { StratumV1JobsService } from './services/stratum-v1-jobs.service';
 import { StratumV1Service } from './services/stratum-v1.service';
@@ -72,6 +73,7 @@ const ORMModules = [
         DiscordService,
         WebhookService,
         PriceService,
+        ActiveClientRegistryService,
         AppService,
         StratumV1Service,
         TelegramService,

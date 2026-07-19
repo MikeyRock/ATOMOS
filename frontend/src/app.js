@@ -127,7 +127,40 @@
     complete();
   }
 
-  // ---------- Setup screen (first-time only) ----------
+  // ---------- Block-found overlay ----------
+  var BLOCK_COUNT_KEY = 'atomos-last-cleared-block-count';
+
+  function showBlockFoundOverlay() {
+    document.getElementById('block-found-overlay').style.display = 'flex';
+  }
+
+  function hideBlockFoundOverlay(persistCount) {
+    document.getElementById('block-found-overlay').style.display = 'none';
+    if (persistCount != null) {
+      localStorage.setItem(BLOCK_COUNT_KEY, String(persistCount));
+    }
+  }
+
+  function checkForNewBlock(blocksFoundCount) {
+    if (blocksFoundCount == null) return;
+    var stored = localStorage.getItem(BLOCK_COUNT_KEY);
+    if (stored == null) {
+      // First time this dashboard has ever checked - don't flash for blocks
+      // that were already found before this was installed, just set the baseline.
+      localStorage.setItem(BLOCK_COUNT_KEY, String(blocksFoundCount));
+      return;
+    }
+    if (blocksFoundCount > Number(stored)) {
+      showBlockFoundOverlay();
+    }
+  }
+
+  document.getElementById('block-found-clear').addEventListener('click', function () {
+    var count = lastClientInfo ? lastClientInfo.blocksFoundCount : 0;
+    hideBlockFoundOverlay(count);
+  });
+
+
   function renderSetup() {
     clearTimers();
     var root = document.getElementById('app-root');
@@ -217,8 +250,8 @@
       '  <div class="card">' +
       '    <div class="card-header"><div><h4>Live Worker Activity</h4><span>Grouped by worker name.</span></div></div>' +
       '    <table>' +
-      '      <thead><tr><th>Name</th><th class="numeric-cell">Hashrate</th><th class="numeric-cell">Best Difficulty</th><th class="numeric-cell">Last Seen</th></tr></thead>' +
-      '      <tbody id="worker-table-body"><tr><td colspan="4">Loading...</td></tr></tbody>' +
+      '      <thead><tr><th>Name</th><th class="numeric-cell">Hashrate</th><th class="numeric-cell">Best Difficulty</th><th class="numeric-cell">Last Seen</th><th class="numeric-cell">Reset</th></tr></thead>' +
+      '      <tbody id="worker-table-body"><tr><td colspan="5">Loading...</td></tr></tbody>' +
       '    </table>' +
       '  </div>' +
 
@@ -231,7 +264,7 @@
       '        <button data-range="24" class="active">24H</button>' +
       '      </div>' +
       '    </div>' +
-      '    <canvas id="hashrate-chart" height="80"></canvas>' +
+      '    <div class="chart-container"><canvas id="hashrate-chart"></canvas></div>' +
       '  </div>' +
 
       '  <div class="panel-row">' +
@@ -268,6 +301,32 @@
 
     document.getElementById('copy-username').addEventListener('click', function () {
       copyText(currentAddress + '.worker1', 'Miner username');
+    });
+
+    document.getElementById('worker-table-body').addEventListener('click', function (e) {
+      var btn = e.target.closest('.reset-diff-btn');
+      if (!btn) return;
+
+      var sessionId = btn.getAttribute('data-session-id');
+      var workerName = btn.getAttribute('data-worker-name');
+
+      if (!confirm('Reset best difficulty for ' + workerName + '? This cannot be undone.')) {
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      apiPost('/client/' + encodeURIComponent(currentAddress) + '/' + encodeURIComponent(sessionId) + '/reset-difficulty')
+        .then(function () {
+          showToast('Best difficulty reset for ' + workerName + '.');
+          refreshClientInfo();
+        })
+        .catch(function () {
+          showToast('Could not reset difficulty - try again.', true);
+          btn.disabled = false;
+          btn.textContent = 'Reset';
+        });
     });
 
     // Initial connection info (stratum URL from runtime config, same-origin hostname fallback)
@@ -313,6 +372,7 @@
 
       renderWorkerTable(info.workers || []);
       renderBlockHistory(info.blocksFound || []);
+      checkForNewBlock(info.blocksFoundCount);
 
       if (lastNetworkInfo) {
         updateBlockProbability(totalHashRate, lastNetworkInfo, info.bestDifficulty);
@@ -409,6 +469,7 @@
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
           x: { ticks: { color: '#8890a0', maxTicksLimit: 8 }, grid: { color: '#1a2230' } },
@@ -423,16 +484,21 @@
     if (!tbody) return;
 
     if (workers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4">No workers connected yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5">No workers connected yet.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = workers.map(function (w) {
+    var sortedWorkers = workers.slice().sort(function (a, b) {
+      return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    tbody.innerHTML = sortedWorkers.map(function (w) {
       return '<tr>' +
         '<td>' + escapeHtml(w.name) + ' <span class="solo-badge">SOLO</span></td>' +
         '<td class="numeric-cell">' + hashSuffix(w.hashRate) + '</td>' +
         '<td class="numeric-cell">' + numberSuffix(w.bestDifficulty) + '</td>' +
         '<td class="numeric-cell">' + dateAgo(w.lastSeen) + '</td>' +
+        '<td class="numeric-cell"><button class="reset-diff-btn" data-session-id="' + escapeHtml(w.sessionId) + '" data-worker-name="' + escapeHtml(w.name) + '">Reset</button></td>' +
         '</tr>';
     }).join('');
   }
@@ -482,6 +548,10 @@
         '    <small>Tests the currently saved webhook - save changes above first if you just entered a new URL.</small>' +
         '  </div>' +
         '  <div class="modal-section">' +
+        '    <button class="btn btn-outline" id="s-test-animation">Test Block-Found Animation</button>' +
+        '    <small>Previews the full-screen alert without affecting your real block count.</small>' +
+        '  </div>' +
+        '  <div class="modal-section">' +
         '    <label>Alerts</label>' +
         '    <div class="toggle-row"><span>Block found</span>' + toggleHtml('s-alert-block', settings.alertBlockFound) + '</div>' +
         '    <div class="toggle-row"><span>New best difficulty</span>' + toggleHtml('s-alert-diff', settings.alertBestDifficulty) + '</div>' +
@@ -502,6 +572,10 @@
           if (result.success) showToast('Test sent - check your Discord channel.');
           else showToast('Test failed: ' + (result.error || 'unknown error'), true);
         }).catch(function () { showToast('Test failed - could not reach the server.', true); });
+      });
+
+      document.getElementById('s-test-animation').addEventListener('click', function () {
+        showBlockFoundOverlay();
       });
 
       document.getElementById('s-save').addEventListener('click', function () {

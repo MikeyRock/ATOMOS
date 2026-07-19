@@ -12,13 +12,22 @@
 <body>
 
   <div id="topbar" class="topbar">
-    <a class="topbar-logo" href="/"><img src="assets/logo.svg" alt="ATOMOS - Solo Mining"></a>
+    <a class="topbar-logo-wrap" href="/">
+      <span class="topbar-logo">ATOMOS</span>
+      <span class="topbar-subtitle">BTC Solo Mining</span>
+      <span class="topbar-credit">Created by MikeyRocks</span>
+    </a>
     <div class="topbar-actions">
       <button id="settings-btn" title="Settings">&#9881;</button>
     </div>
   </div>
 
   <div id="app-root"></div>
+
+  <div id="block-found-overlay" class="block-found-overlay" style="display:none;">
+    <div class="block-found-text">&#9935; BTC BLOCK FOUND! &#9935;</div>
+    <button id="block-found-clear" class="btn btn-outline">Clear Notification</button>
+  </div>
 
   <div id="toast-container"></div>
 

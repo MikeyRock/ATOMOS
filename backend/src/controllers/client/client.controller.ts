@@ -1,10 +1,11 @@
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 
 import { AddressSettingsService } from '../../ORM/address-settings/address-settings.service';
 import { BlocksService } from '../../ORM/blocks/blocks.service';
 import { ClientStatisticsService } from '../../ORM/client-statistics/client-statistics.service';
 import { ClientService } from '../../ORM/client/client.service';
+import { ActiveClientRegistryService } from '../../services/active-client-registry.service';
 import { BitcoinRpcService } from '../../services/bitcoin-rpc.service';
 
 
@@ -16,7 +17,8 @@ export class ClientController {
         private readonly clientStatisticsService: ClientStatisticsService,
         private readonly addressSettingsService: AddressSettingsService,
         private readonly blocksService: BlocksService,
-        private readonly bitcoinRpcService: BitcoinRpcService
+        private readonly bitcoinRpcService: BitcoinRpcService,
+        private readonly activeClientRegistry: ActiveClientRegistryService
     ) { }
 
     private getCurrentBlockReward(blockHeight: number): number {
@@ -64,6 +66,24 @@ export class ClientController {
             totalEarnedEstimate: blocksFound.length * currentBlockReward,
             acceptedSharesLast24h
         }
+    }
+
+    @Post(':address/:sessionId/reset-difficulty')
+    async resetWorkerBestDifficulty(@Param('address') address: string, @Param('sessionId') sessionId: string) {
+
+        // Confirm this sessionId actually belongs to this address before
+        // allowing a reset - avoids resetting an arbitrary session by guessing IDs.
+        const workers = await this.clientService.getByAddress(address);
+        const belongsToAddress = workers.some(w => w.sessionId === sessionId);
+
+        if (!belongsToAddress) {
+            return new NotFoundException('No worker session found for this address with that session ID.');
+        }
+
+        await this.clientService.updateBestDifficulty(sessionId, 0);
+        const wasLiveReset = this.activeClientRegistry.resetBestDifficulty(sessionId);
+
+        return { success: true, wasConnected: wasLiveReset };
     }
 
     @Get(':address/chart')

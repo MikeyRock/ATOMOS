@@ -28,6 +28,7 @@ import { EXTRANONCE1_SIZE_BYTES } from './stratum.constants';
 import { SuggestDifficulty } from './stratum-messages/SuggestDifficultyMessage';
 import { StratumV1ClientStatistics } from './StratumV1ClientStatistics';
 import { ExternalSharesService } from '../services/external-shares.service';
+import { ActiveClientRegistryService } from '../services/active-client-registry.service';
 
 const TRUE_DIFF_ONE = 2.695953529101131e67;
 const BLOCKED_USER_AGENT_LOG_INTERVAL_MS = 60 * 1000;
@@ -73,7 +74,8 @@ export class StratumV1Client {
         private readonly blocksService: BlocksService,
         private readonly configService: ConfigService,
         private readonly addressSettingsService: AddressSettingsService,
-        private readonly externalSharesService: ExternalSharesService
+        private readonly externalSharesService: ExternalSharesService,
+        private readonly activeClientRegistry: ActiveClientRegistryService
     ) {
 
         this.socket.on('data', (data: Buffer) => {
@@ -103,6 +105,7 @@ export class StratumV1Client {
 
         if (this.extraNonceAndSessionId) {
             await this.clientService.delete(this.extraNonceAndSessionId);
+            this.activeClientRegistry.unregister(this.extraNonceAndSessionId);
         }
 
         if (this.stratumSubscription != null) {
@@ -112,6 +115,14 @@ export class StratumV1Client {
         this.backgroundWork.forEach(work => {
             clearInterval(work);
         });
+    }
+
+    // Called via the reset-difficulty API endpoint. Clears the in-memory
+    // gate so the next share (of any difficulty) is correctly recorded as
+    // this session's new best, rather than being silently compared against
+    // the pre-reset historical value.
+    public resetBestDifficulty() {
+        this.entity.bestDifficulty = 0;
     }
 
     private getRandomHexString() {
@@ -160,6 +171,7 @@ export class StratumV1Client {
                         this.sessionStart = new Date();
                         this.statistics = new StratumV1ClientStatistics(this.clientStatisticsService);
                         this.extraNonceAndSessionId = this.getRandomHexString();
+                        this.activeClientRegistry.register(this.extraNonceAndSessionId, this);
                         console.log(`New client ID: : ${this.extraNonceAndSessionId}, ${this.socket.remoteAddress}:${this.socket.remotePort}`);
                     }
 

@@ -26,7 +26,8 @@ describe('StratumV1Service', () => {
             {} as any,
             {} as any,
             {} as any,
-            {} as any
+            {} as any,
+            { register: jest.fn(), unregister: jest.fn(), resetBestDifficulty: jest.fn() } as any
         );
         consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
         consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);

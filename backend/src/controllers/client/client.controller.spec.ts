@@ -8,6 +8,7 @@ import { BlocksModule } from '../../ORM/blocks/blocks.module';
 import { ClientStatisticsModule } from '../../ORM/client-statistics/client-statistics.module';
 import { ClientModule } from '../../ORM/client/client.module';
 import { BitcoinRpcService } from '../../services/bitcoin-rpc.service';
+import { ActiveClientRegistryService } from '../../services/active-client-registry.service';
 import { ClientController } from './client.controller';
 
 describe('ClientController', () => {
@@ -36,7 +37,8 @@ describe('ClientController', () => {
           useValue: {
             newBlock$: of({ blocks: 900000, difficulty: 1, networkhashps: 1 })
           }
-        }
+        },
+        ActiveClientRegistryService
       ]
 
     }).compile();

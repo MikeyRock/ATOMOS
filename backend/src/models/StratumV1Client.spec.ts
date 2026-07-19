@@ -179,7 +179,8 @@ describe('StratumV1Client', () => {
             blocksService,
             configService,
             addressSettings,
-            externalSharesService
+            externalSharesService,
+            { register: jest.fn(), unregister: jest.fn(), resetBestDifficulty: jest.fn() } as any
         );
 
         client.extraNonceAndSessionId = MockRecording1.EXTRA_NONCE;
@@ -275,7 +276,8 @@ describe('StratumV1Client', () => {
             blocksService,
             configService,
             moduleRef.get<AddressSettingsService>(AddressSettingsService),
-            externalSharesService
+            externalSharesService,
+            { register: jest.fn(), unregister: jest.fn(), resetBestDifficulty: jest.fn() } as any
         );
 
         socketEmitter(Buffer.from(`{"id":1,"method":"mining.subscribe","params":["NMMiner/1.0"]}\n`));
@@ -571,7 +573,8 @@ describe('StratumV1Client', () => {
             blocksService,
             configService,
             moduleRef.get<AddressSettingsService>(AddressSettingsService),
-            externalSharesService
+            externalSharesService,
+            { register: jest.fn(), unregister: jest.fn(), resetBestDifficulty: jest.fn() } as any
         );
         jest.spyOn(secondClient as any, 'write').mockImplementation((data) => Promise.resolve(true));
         jest.spyOn(secondClient as any, 'getRandomHexString').mockReturnValue(MockRecording1.EXTRA_NONCE);
