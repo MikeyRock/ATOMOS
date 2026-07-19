@@ -3,7 +3,7 @@ id: atomos-pool
 category: bitcoin
 name: ATOMOS
 icon: https://raw.githubusercontent.com/MikeyRock/ATOMOS/main/atomos-pool/icon.svg
-version: "3.3.0"
+version: "3.4.0"
 tagline: My own branded solo Bitcoin mining pool
 description: >-
   A self-hosted solo Bitcoin mining pool. The mining/stratum backend is
@@ -22,11 +22,11 @@ gallery:
   - 2.jpg
 path: ""
 releaseNotes: >-
-  v3.0.0: complete frontend replacement. The old Angular/PrimeNG UI is
-  gone entirely, replaced with a dependency-free HTML/CSS/JS dashboard -
-  no framework, no build step, no leftover Public Pool UI code. One page,
-  one dashboard, lands straight on it every time. The mining backend
-  (stratum server, Bitcoin RPC, share validation) is unchanged.
+  v3.4.0: block-found alert now rains confetti (canvas-based, self-hosted,
+  no external library) in your theme colors while the alert is showing.
+  Also removed the flashing background from the block-found overlay - the
+  text still pulses, but the background is now a steady dark tone instead
+  of alternating colors.
 defaultPassword: ""
 widgets:
   - id: "stats"
